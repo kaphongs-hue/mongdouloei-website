@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+  <html lang="th">
+  <head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>มองดูเลยโฮมสเตย์ — บ้านไฮตาก, ภูเรือ, เลย</title>
+  <meta name="description" content="มองดูเลยโฮมสเตย์ ที่พักกลางหมอกและขุนเขา อำเภอภูเรือ จังหวัดเลย" />
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Trirong:wght@400;500;600;700&family=Prompt:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root{
+      --forest:#1b2e21;
+    --forest-deep:#0f1c14;
+    --amber:#c98a3c;
+          --cream:#f6f1e6;
+          --mist:#dfe6df;
+          --ink:#20241f;
+}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  html{scroll-behavior:smooth;}
+  body{
+        font-family:'Prompt',sans-serif;
+    background:var(--cream);
+    color:var(--ink);
+    line-height:1.7;
+}
+  h1,h2,h3{font-family:'Trirong',serif;font-weight:600;color:var(--forest-deep);}
+  a{color:inherit;}
+  .wrap{max-width:960px;margin:0 auto;padding:0 24px;}
+
+  header{
+        background:linear-gradient(180deg, var(--forest-deep) 0%, var(--forest) 100%);
+    color:var(--cream);
+    padding:96px 24px 120px;
+    text-align:center;
+    position:relative;
+    overflow:hidden;
+}
+  header::before{
+        content:"";
+    position:absolute; inset:0;
+    background:
+          radial-gradient(ellipse 60% 40% at 20% 100%, rgba(246,241,230,0.08), transparent 60%),
+                  radial-gradient(ellipse 50% 30% at 80% 90%, rgba(246,241,230,0.06), transparent 60%);
+}
+  header .eyebrow{
+    font-size:13px; letter-spacing:.25em; text-transform:uppercase;
+    color:var(--amber); margin-bottom:18px; position:relative;
+  }
+  header h1{
+        font-size:clamp(34px,6vw,58px);
+    color:var(--cream);
+    letter-spacing:.02em;
+    position:relative;
+  }
+  header p.tag{
+        margin-top:18px; font-size:17px; color:var(--mist); position:relative;
+    max-width:520px; margin-left:auto; margin-right:auto;
+}
+
+  section{padding:72px 0;}
+  section.alt{background:#eee7d6;}
+    .section-head{margin-bottom:36px;}
+  .section-head .eyebrow{
+    font-size:12px; letter-spacing:.2em; text-transform:uppercase; color:var(--amber); font-weight:600;
+  }
+  .section-head h2{font-size:30px; margin-top:8px;}
+
+  .grid{display:grid; grid-template-columns:repeat(3,1fr); gap:20px;}
+  .card{
+        background:#fff; border:1px solid #e4dcc9; border-radius:2px;
+            padding:26px 22px;
+  }
+  .card h3{font-size:19px; margin-bottom:8px;}
+  .card p{font-size:14.5px; color:#4a4a42;}
+  .price{color:var(--amber); font-weight:600; margin-top:10px; font-size:14px;}
+
+  .contact-box{
+        background:var(--forest); color:var(--cream);
+    padding:44px; border-radius:2px;
+    display:flex; flex-wrap:wrap; gap:28px; align-items:center; justify-content:space-between;
+}
+  .contact-box a.btn{
+    display:inline-block; background:var(--amber); color:var(--forest-deep);
+    padding:13px 26px; text-decoration:none; font-weight:600; border-radius:2px;
+    font-size:15px;
+  }
+  .contact-box .addr{font-size:14.5px; color:var(--mist); max-width:420px;}
+
+  footer{
+        padding:36px 24px; text-align:center; font-size:13px; color:#7a7a6f;
+    border-top:1px solid #e4dcc9;
+      }
+  footer a{text-decoration:underline; margin:0 8px;}
+
+  @media (max-width:720px){
+    .grid{grid-template-columns:1fr;}
+    header{padding:72px 20px 90px;}
+}
+</style>
+  </head>
+  <body>
+
+  <header>
+    <div class="eyebrow">Phu Ruea · Loei · Thailand</div>
+    <h1>มอง. ดู. เลย.</h1>
+    <p class="tag">มองดูเลยโฮมสเตย์ — ที่พักกลางหมอกและขุนเขา บ้านไหตาก ตำบลลาดค่าง อำเภอภูเรือ จังหวัดเลย</p>
+  </header>
+
+  <section>
+    <div class="wrap">
+      <div class="section-head">
+        <div class="eyebrow">เกี่ยวกับเรา</div>
+        <h2>พักผ่อนท่ามกลางธรรมชาติที่ภูเรือ</h2>
+      </div>
+      <p style="max-width:640px;color:#3d3d35;">
+        มองดูเลยโฮมสเตย์ ตั้งอยู่ในบรรยากาศภูเขาและสายหมอกของอำเภอภูเรือ จังหวัดเลย
+        ห้องพักออกแบบให้กลมกลืนกับธรรมชาติ เหมาะสำหรับผู้ที่ต้องการหลีกหนีความวุ่นวาย
+        มาสัมผัสอากาศเย็นสบายและวิวภูเขาที่สวยงามตลอดทั้งปี
+      </p>
+    </div>
+  </section>
+
+  <section class="alt">
+    <div class="wrap">
+      <div class="section-head">
+        <div class="eyebrow">ห้องพัก</div>
+        <h2>เลือกบรรยากาศที่ใช่สำหรับคุณ</h2>
+      </div>
+      <div class="grid">
+        <div class="card">
+          <h3>บ้านมองดูเธอ</h3>
+          <p>ห้องพักไม้อบอุ่น วิวภูเขา บรรยากาศเงียบสงบ</p>
+          <div class="price">1,500 บาท / คืน</div>
+        </div>
+        <div class="card">
+          <h3>บ้านมองดูวิว</h3>
+          <p>ระเบียงกว้าง ชมวิวสายหมอกยามเช้าได้เต็มตา</p>
+          <div class="price">1,500 บาท / คืน</div>
+        </div>
+        <div class="card">
+          <h3>บ้านสุดทางรัก</h3>
+          <p>ห้องมุมเงียบสงบ เหมาะกับคู่รักและครอบครัวเล็ก</p>
+          <div class="price">1,500 บาท / คืน</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <div class="wrap">
+      <div class="section-head">
+        <div class="eyebrow">ติดต่อเรา</div>
+        <h2>พร้อมต้อนรับทุกการมาเยือน</h2>
+      </div>
+      <div class="contact-box">
+        <div class="addr">
+          110 หมู่ 2 บ้านไหตาก ต.ลาดค่าง อ.ภูเรือ จ.เลย 42160<br>
+          เปิดให้บริการทุกวัน · ติดต่อสอบถามและจองผ่าน Facebook Messenger
+        </div>
+        <a class="btn" href="https://m.me/Hitakland" target="_blank" rel="noopener">ทักแชทจองห้องพัก</a>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <div>© 2026 มองดูเลยโฮมสเตย์ · Mong Doo Loei Homestay</div>
+    <div style="margin-top:8px;">
+      <a href="privacy.html">นโยบายความเป็นส่วนตัว</a>
+      <a href="terms.html">ข้อกำหนดการใช้งาน</a>
+    </div>
+  </footer>
+
+  </body>
+  </html>
