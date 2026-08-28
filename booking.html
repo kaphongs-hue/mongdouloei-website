@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>จองห้องพัก — มองดูเลยโฮมสเตย์</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Trirong:wght@400;500;600;700&family=Prompt:wght@300;400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --forest-deep:#0f1c14;
+    --forest:#1b2e21;
+    --forest-soft:#25392b;
+    --amber:#c98a3c;
+    --amber-deep:#a66f2c;
+    --amber-soft:#f0dfc0;
+    --cream:#f6f1e6;
+    --cream-deep:#eee7d6;
+    --mist:#dfe6df;
+    --ink:#20241f;
+    --ink-soft:#5c5c50;
+    --line:#e4dcc9;
+    --danger:#a83c28;
+    --radius:6px;
+  }
+  *{box-sizing:border-box;}
+  html{scroll-behavior:smooth;}
+  body{
+    margin:0;
+    background:var(--cream);
+    color:var(--ink);
+    font-family:'Prompt',sans-serif;
+    font-size:16px;
+    line-height:1.75;
+  }
+  .mono{font-family:'JetBrains Mono',monospace;}
+  h1,h2,h3{font-family:'Trirong',serif; font-weight:600; margin:0; color:var(--forest-deep);}
+  a{ color:inherit; }
+
+  /* ===== Nav (เหมือนหน้าแรก) ===== */
+  .nav{
+    position:sticky; top:0; z-index:40;
+    background:rgba(246,241,230,0.92);
+    backdrop-filter:blur(8px);
+    border-bottom:1px solid var(--line);
+  }
+  .nav-inner{
+    max-width:920px; margin:0 auto; padding:14px 24px;
+    display:flex; align-items:center; justify-content:space-between;
+  }
+  .nav-logo{
+    font-family:'Trirong',serif; font-weight:700; font-size:18px;
+    color:var(--forest-deep); text-decoration:none;
+  }
+  .nav-logo span{ color:var(--amber-deep); }
+  .nav-back{
+    font-size:14px; color:var(--ink-soft); text-decoration:none;
+  }
+  .nav-back:hover{ color:var(--forest-deep); }
+
+  /* ===== Hero: หมอกยามเช้าเหนือภูเขา ===== */
+  .hero{
+    position:relative;
+    overflow:hidden;
+    background:
+      linear-gradient(175deg, rgba(15,28,20,0.80) 0%, rgba(27,46,33,0.68) 55%, rgba(15,28,20,0.90) 100%),
+      url('hero-view.jpg') center 42% / cover no-repeat;
+    padding:52px 20px 96px;
+    text-align:center;
+    color:var(--cream);
+  }
+  .hero::before{
+    content:"";
+    position:absolute; inset:0;
+    background:radial-gradient(ellipse 60% 40% at 15% 100%, rgba(201,138,60,0.12), transparent 60%);
+  }
+  .mist-layer{
+    content:"";
+    position:absolute;
+    left:-10%;
+    width:120%;
+    height:120px;
+    background:radial-gradient(ellipse at center, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0) 70%);
+    filter:blur(7px);
+    opacity:0.16;
+    pointer-events:none;
+    animation: driftMist 28s ease-in-out infinite;
+  }
+  .mist-1{ top:34%; animation-duration:22s; }
+  .mist-2{ top:56%; animation-duration:32s; animation-direction:reverse; opacity:0.12; }
+  @keyframes driftMist{
+    0%{ transform:translateX(-4%); }
+    50%{ transform:translateX(4%); }
+    100%{ transform:translateX(-4%); }
+  }
+  @media (prefers-reduced-motion: reduce){ .mist-layer{ animation:none; } }
+  .hero-eyebrow{
+    position:relative;
+    font-size:12px;
+    letter-spacing:.24em;
+    text-transform:uppercase;
+    color:var(--amber);
+    font-weight:600;
+    margin-bottom:14px;
+  }
+  .hero h1{
+    position:relative;
+    font-size:clamp(30px,6vw,46px);
+    line-height:1.2;
+    color:var(--cream);
+  }
+  .hero p.sub{
+    position:relative;
+    max-width:480px;
+    margin:14px auto 0;
+    color:var(--mist);
+    font-size:15.5px;
+  }
+  .mountains{
+    position:absolute;
+    bottom:-2px;
+    left:0;
+    width:100%;
+    line-height:0;
+  }
+
+  /* ===== Layout ===== */
+  .wrap{ max-width:840px; margin:0 auto; padding:0 20px; }
+  main.wrap{ margin-top:-48px; position:relative; z-index:2; }
+  section{ padding:0 0 48px; }
+  .panel{
+    background:var(--cream);
+  }
+  .section-head{ display:flex; align-items:center; gap:12px; margin-bottom:20px; }
+  .step-num{
+    width:30px; height:30px; border-radius:50%;
+    background:var(--forest); color:var(--cream);
+    font-family:'JetBrains Mono',monospace; font-size:13.5px; font-weight:600;
+    display:flex; align-items:center; justify-content:center;
+    flex-shrink:0;
+  }
+  .section-head h2{ font-size:21px; }
+
+  /* ===== Room cards ===== */
+  .rooms-scroll{
+    display:grid;
+    grid-template-columns:repeat(auto-fill, minmax(210px, 1fr));
+    gap:14px;
+  }
+  .room-card{
+    background:#fff;
+    border:1.5px solid var(--line);
+    border-radius:var(--radius);
+    padding:0;
+    cursor:pointer;
+    text-align:left;
+    transition:border-color .15s, box-shadow .15s, transform .15s;
+    position:relative;
+    overflow:hidden;
+    display:block;
+  }
+  .room-card:hover{ transform:translateY(-2px); box-shadow:0 12px 26px rgba(15,28,20,0.10); }
+  .room-card.selected{
+    border-color:var(--forest);
+    box-shadow:0 0 0 2px var(--forest);
+  }
+  .room-card::before{
+    content:"";
+    display:block;
+    height:54px;
+    background:linear-gradient(135deg, var(--forest) 0%, var(--forest-soft) 100%);
+  }
+  .room-card .emoji{ font-size:24px; position:absolute; top:12px; left:14px; }
+  .room-card .name{ font-weight:700; font-size:15.5px; margin:14px 16px 2px; color:var(--forest-deep); }
+  .room-card .meta{ color:var(--ink-soft); font-size:13px; margin:0 16px 12px; }
+  .room-card .price{
+    font-family:'JetBrains Mono',monospace;
+    font-weight:600;
+    font-size:15.5px;
+    color:var(--amber-deep);
+    margin:0 16px 16px;
+  }
+  .room-card .price small{ font-family:'Prompt',sans-serif; font-weight:400; color:var(--ink-soft); font-size:12px; }
+  .room-card .check{
+    position:absolute; top:10px; right:12px;
+    width:22px; height:22px; border-radius:50%;
+    border:2px solid rgba(255,255,255,0.6);
+    display:flex; align-items:center; justify-content:center;
+    color:transparent;
+    font-size:13px;
+  }
+  .room-card.selected .check{ border-color:var(--amber); background:var(--amber); color:var(--forest-deep); }
+
+  /* ===== Form ===== */
+  .ledger{
+    background:#fff;
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    padding:28px;
+  }
+  .field{ margin-bottom:18px; }
+  .field label{
+    display:block;
+    font-size:13.5px;
+    font-weight:600;
+    color:var(--forest-deep);
+    margin-bottom:6px;
+  }
+  .field .hint{ font-size:12.5px; color:var(--ink-soft); margin-top:5px; }
+  .row2{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  input, textarea{
+    width:100%;
+    font-family:'Prompt',sans-serif;
+    font-size:15.5px;
+    padding:12px 14px;
+    border:1.5px solid var(--line);
+    border-radius:4px;
+    background:#fff;
+    color:var(--ink);
+  }
+  input:focus, textarea:focus{
+    outline:none;
+    border-color:var(--forest);
+    box-shadow:0 0 0 3px rgba(27,46,33,0.10);
+  }
+  textarea{ resize:vertical; min-height:70px; }
+
+  .summary{
+    margin-top:6px;
+    background:var(--cream-deep);
+    border-radius:4px;
+    padding:16px 18px;
+  }
+  .summary-row{
+    display:flex; justify-content:space-between; align-items:center;
+    padding:5px 0;
+    font-size:14.5px;
+  }
+  .summary-row.total{
+    font-weight:700; font-size:17px; color:var(--forest-deep);
+    border-top:1px solid var(--line); margin-top:6px; padding-top:12px;
+  }
+  .summary-row .val{ font-family:'JetBrains Mono',monospace; }
+
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center; gap:8px;
+    width:100%;
+    padding:16px 20px;
+    border:none;
+    border-radius:var(--radius);
+    background:var(--amber);
+    color:var(--forest-deep);
+    font-family:'Prompt',sans-serif;
+    font-weight:700;
+    font-size:16px;
+    cursor:pointer;
+    transition:background .15s, transform .1s;
+    margin-top:20px;
+  }
+  .btn:hover{ background:#dba054; }
+  .btn:active{ transform:scale(0.99); }
+  .btn:disabled{ background:#d8d0be; color:#8f8877; cursor:not-allowed; }
+  .btn:focus-visible{ outline:3px solid var(--forest); outline-offset:2px; }
+
+  .msg{
+    border-radius:4px;
+    padding:13px 16px;
+    font-size:14.5px;
+    margin-top:14px;
+    display:none;
+  }
+  .msg.error{ display:block; background:#FBECE8; color:var(--danger); border:1px solid #F0C9BE; }
+  .msg.info{ display:block; background:var(--cream-deep); color:var(--forest-deep); border:1px solid var(--line); }
+
+  /* ===== Confirmation ===== */
+  .confirm{
+    display:none;
+    background:linear-gradient(135deg, var(--forest) 0%, var(--forest-deep) 100%);
+    color:var(--cream);
+    border-radius:var(--radius);
+    padding:36px 30px;
+    text-align:center;
+  }
+  .confirm.show{ display:block; }
+  .confirm h2{ color:#fff; font-size:23px; }
+  .confirm .code{
+    font-family:'JetBrains Mono',monospace;
+    font-size:22px;
+    letter-spacing:.03em;
+    background:rgba(255,255,255,0.1);
+    display:inline-block;
+    padding:8px 18px;
+    border-radius:4px;
+    margin:14px 0;
+  }
+  .confirm .amt{ font-size:32px; font-family:'JetBrains Mono',monospace; color:var(--amber); margin:6px 0; font-weight:600; }
+  .confirm p{ color:var(--mist); }
+  .confirm .contact{
+    margin-top:22px;
+    padding-top:20px;
+    border-top:1px solid rgba(255,255,255,0.16);
+    font-size:14.5px;
+  }
+  .confirm .home-link{
+    display:inline-block; margin-top:18px; font-size:13.5px;
+    color:var(--amber); text-decoration:none; border-bottom:1px solid rgba(201,138,60,0.4);
+  }
+
+  footer{
+    text-align:center;
+    padding:36px 20px 50px;
+    color:var(--ink-soft);
+    font-size:13px;
+  }
+
+  .skeleton{
+    height:104px; border-radius:var(--radius);
+    background:linear-gradient(90deg, var(--cream-deep) 25%, #f4f0e5 37%, var(--cream-deep) 63%);
+    background-size:400% 100%;
+    animation:shimmer 1.4s ease infinite;
+  }
+  @keyframes shimmer{ 0%{background-position:100% 0;} 100%{background-position:0 0;} }
+
+  @media (max-width:520px){
+    .row2{ grid-template-columns:1fr; }
+    main.wrap{ margin-top:-32px; }
+  }
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-logo">มองดู<span>เลย</span></a>
+    <a href="index.html" class="nav-back">← กลับหน้าแรก</a>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="mist-layer mist-1"></div>
+  <div class="mist-layer mist-2"></div>
+  <div class="hero-eyebrow" id="businessNameEyebrow">มองดูเลยโฮมสเตย์ · เลย</div>
+  <h1>จองห้องพักของคุณ</h1>
+  <p class="sub">เลือกวันที่ กรอกข้อมูล แล้วรอเราติดต่อกลับยืนยันการจอง</p>
+</header>
+
+<main class="wrap">
+  <section id="rooms-section" class="panel">
+    <div class="section-head">
+      <div class="step-num">1</div>
+      <h2>เลือกห้องพัก</h2>
+    </div>
+    <div class="rooms-scroll" id="roomsGrid">
+      <div class="skeleton"></div>
+      <div class="skeleton"></div>
+      <div class="skeleton"></div>
+    </div>
+  </section>
+
+  <section id="form-section">
+    <div class="section-head">
+      <div class="step-num">2</div>
+      <h2>รายละเอียดการเข้าพัก</h2>
+    </div>
+    <form class="ledger" id="bookingForm">
+      <div class="row2">
+        <div class="field">
+          <label for="checkIn">วันเช็คอิน</label>
+          <input type="date" id="checkIn" required />
+        </div>
+        <div class="field">
+          <label for="checkOut">วันเช็คเอาท์</label>
+          <input type="date" id="checkOut" required />
+        </div>
+      </div>
+
+      <div class="row2">
+        <div class="field">
+          <label for="guestName">ชื่อผู้จอง</label>
+          <input type="text" id="guestName" placeholder="ชื่อ-นามสกุล" required maxlength="100" />
+        </div>
+        <div class="field">
+          <label for="phone">เบอร์โทรติดต่อ</label>
+          <input type="tel" id="phone" placeholder="08xxxxxxxx" required />
+        </div>
+      </div>
+
+      <div class="field">
+        <label for="guests">จำนวนผู้เข้าพัก (ท่าน)</label>
+        <input type="number" id="guests" min="1" value="2" required style="max-width:140px;" />
+      </div>
+
+      <div class="field">
+        <label for="note">หมายเหตุถึงเจ้าของบ้าน (ไม่บังคับ)</label>
+        <textarea id="note" placeholder="เช่น ถึงประมาณกี่โมง, มีเด็กเล็กมาด้วย ฯลฯ" maxlength="500"></textarea>
+      </div>
+
+      <div class="summary" id="summaryBox" style="display:none;">
+        <div class="summary-row"><span>ราคาห้อง × <span id="sumNights">1</span> คืน</span><span class="val" id="sumRoomTotal">–</span></div>
+        <div class="summary-row total"><span>ยอดรวมโดยประมาณ</span><span class="val" id="sumTotal">–</span></div>
+        <div class="summary-row"><span>มัดจำที่ต้องชำระ (50%)</span><span class="val" id="sumDeposit">–</span></div>
+      </div>
+
+      <div class="msg error" id="errorMsg"></div>
+
+      <button type="submit" class="btn" id="submitBtn">ส่งคำขอจอง</button>
+      <div class="hint" style="text-align:center;margin-top:10px;">การจองจะยังไม่สมบูรณ์จนกว่าเจ้าของบ้านจะติดต่อกลับยืนยัน</div>
+    </form>
+
+    <div class="confirm" id="confirmBox">
+      <h2>ส่งคำขอจองแล้ว 🌄</h2>
+      <p>เลขที่การจองของคุณ</p>
+      <div class="code" id="confirmCode">MDL-XXXXXXXX</div>
+      <p style="margin-bottom:0;">ยอดมัดจำที่ต้องชำระ</p>
+      <div class="amt" id="confirmDeposit">–</div>
+      <p>จากยอดรวม <span id="confirmTotal" class="mono">–</span> บาท</p>
+      <div class="contact">
+        <div id="confirmContactText">เจ้าของบ้านจะติดต่อกลับทางเบอร์ที่ให้ไว้เพื่อยืนยันและแจ้งช่องทางโอนมัดจำ</div>
+      </div>
+      <a class="home-link" href="index.html">← กลับหน้าแรก</a>
+    </div>
+  </section>
+
+</main>
+
+<footer id="footerText">มองดูเลยโฮมสเตย์</footer>
+
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
+  import { getFirestore, collection, query, where, orderBy, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+  import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-functions.js";
+
+  // ---------------------------------------------------------------
+  // ตั้งค่า Firebase — เอาค่าจริงมาจาก lib/firebase_options.dart
+  // (หัวข้อ web:) หรือ Firebase Console > Project settings > General
+  // > Your apps > บันทึกแอปเว็บ (Web app) แล้วแทนที่ค่าด้านล่างนี้ทั้งหมด
+  // ---------------------------------------------------------------
+  const firebaseConfig = {
+    apiKey: "ใส่ค่า apiKey ของคุณ",
+    authDomain: "booking-f90a4.firebaseapp.com",
+    projectId: "booking-f90a4",
+    storageBucket: "booking-f90a4.appspot.com",
+    messagingSenderId: "ใส่ค่า messagingSenderId ของคุณ",
+    appId: "ใส่ค่า appId ของคุณ",
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+  const functions = getFunctions(app, "asia-southeast1");
+  const createPublicBooking = httpsCallable(functions, "createPublicBooking");
+
+  let rooms = [];
+  let selectedRoom = null;
+
+  const money = (n) => new Intl.NumberFormat("th-TH").format(Math.round(n));
+
+  // ---------------- โหลดข้อมูลธุรกิจ (ชื่อ, เบอร์ติดต่อ) ----------------
+  async function loadSettings() {
+    try {
+      const snap = await getDoc(doc(db, "settings", "app"));
+      if (snap.exists()) {
+        const s = snap.data();
+        if (s.businessName) {
+          document.getElementById("businessNameEyebrow").textContent = s.businessName;
+          document.getElementById("footerText").textContent =
+            `${s.businessName}${s.contactPhone ? " · โทร " + s.contactPhone : ""}`;
+          document.title = `จองห้องพัก — ${s.businessName}`;
+        }
+      }
+    } catch (e) {
+      // ไม่ critical ถ้าโหลดไม่ได้ ใช้ชื่อ default ต่อไป
+      console.warn("โหลดข้อมูลธุรกิจไม่สำเร็จ", e);
+    }
+  }
+
+  // ---------------- โหลดรายชื่อห้องพัก ----------------
+  async function loadRooms() {
+    const grid = document.getElementById("roomsGrid");
+    try {
+      const q = query(
+        collection(db, "rooms"),
+        where("active", "==", true),
+        orderBy("sortOrder")
+      );
+      const snap = await getDocs(q);
+      rooms = snap.docs.map((d) => ({ id: d.id, ...d.data() }));
+
+      if (rooms.length === 0) {
+        grid.innerHTML = `<div class="msg info" style="display:block;">ตอนนี้ยังไม่มีห้องพักเปิดให้จอง กรุณาติดต่อเจ้าของบ้านโดยตรง</div>`;
+        return;
+      }
+
+      grid.innerHTML = rooms.map((r) => `
+        <button type="button" class="room-card" data-id="${r.id}">
+          <div class="check">✓</div>
+          <div class="emoji">${r.emoji || "🏡"}</div>
+          <div class="name">${r.name}</div>
+          <div class="meta">พักได้ ${r.capacity || 2} ท่าน</div>
+          <div class="price">฿${money(r.price || 0)} <small>/ คืน</small></div>
+        </button>
+      `).join("");
+
+      grid.querySelectorAll(".room-card").forEach((card) => {
+        card.addEventListener("click", () => selectRoom(card.dataset.id));
+      });
+    } catch (e) {
+      grid.innerHTML = `<div class="msg error" style="display:block;">โหลดรายชื่อห้องพักไม่สำเร็จ กรุณารีเฟรชหน้าใหม่อีกครั้ง</div>`;
+      console.error(e);
+    }
+  }
+
+  function selectRoom(id) {
+    selectedRoom = rooms.find((r) => r.id === id) || null;
+    document.querySelectorAll(".room-card").forEach((c) => {
+      c.classList.toggle("selected", c.dataset.id === id);
+    });
+    updateSummary();
+  }
+
+  // ---------------- คำนวณตัวเลขคร่าวๆ ให้ดูก่อนส่ง (server คำนวณจริงอีกที) ----------------
+  function nightsBetween(a, b) {
+    const ms = new Date(b) - new Date(a);
+    return Math.round(ms / 86400000);
+  }
+
+  function updateSummary() {
+    const box = document.getElementById("summaryBox");
+    const ci = document.getElementById("checkIn").value;
+    const co = document.getElementById("checkOut").value;
+    if (!selectedRoom || !ci || !co) { box.style.display = "none"; return; }
+    const nights = nightsBetween(ci, co);
+    if (nights < 1) { box.style.display = "none"; return; }
+
+    const roomTotal = (selectedRoom.price || 0) * nights;
+    const total = roomTotal; // ค่าเสริมท่านคำนวณฝั่งแอดมินตอนยืนยันอีกที
+    const deposit = Math.round(total * 0.5);
+
+    document.getElementById("sumNights").textContent = nights;
+    document.getElementById("sumRoomTotal").textContent = `฿${money(roomTotal)}`;
+    document.getElementById("sumTotal").textContent = `฿${money(total)}`;
+    document.getElementById("sumDeposit").textContent = `฿${money(deposit)}`;
+    box.style.display = "block";
+  }
+
+  document.getElementById("checkIn").addEventListener("change", (e) => {
+    const co = document.getElementById("checkOut");
+    const next = new Date(e.target.value);
+    next.setDate(next.getDate() + 1);
+    co.min = e.target.value;
+    if (!co.value || new Date(co.value) <= new Date(e.target.value)) {
+      co.value = next.toISOString().slice(0, 10);
+    }
+    updateSummary();
+  });
+  document.getElementById("checkOut").addEventListener("change", updateSummary);
+
+  // ตั้งค่า min วันที่เป็นวันนี้
+  const todayStr = new Date().toISOString().slice(0, 10);
+  document.getElementById("checkIn").min = todayStr;
+
+  // ---------------- ส่งคำขอจอง ----------------
+  document.getElementById("bookingForm").addEventListener("submit", async (e) => {
+    e.preventDefault();
+    const errorBox = document.getElementById("errorMsg");
+    errorBox.style.display = "none";
+
+    if (!selectedRoom) {
+      errorBox.textContent = "กรุณาเลือกห้องพักก่อนครับ";
+      errorBox.style.display = "block";
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+
+    const btn = document.getElementById("submitBtn");
+    btn.disabled = true;
+    btn.textContent = "กำลังส่งคำขอ...";
+
+    try {
+      const result = await createPublicBooking({
+        roomId: selectedRoom.id,
+        guestName: document.getElementById("guestName").value.trim(),
+        phone: document.getElementById("phone").value.trim(),
+        guests: parseInt(document.getElementById("guests").value, 10),
+        checkInDate: document.getElementById("checkIn").value,
+        checkOutDate: document.getElementById("checkOut").value,
+        note: document.getElementById("note").value.trim(),
+      });
+
+      const data = result.data;
+      document.getElementById("confirmCode").textContent = data.bookingCode;
+      document.getElementById("confirmDeposit").textContent = `฿${money(data.expectedDeposit)}`;
+      document.getElementById("confirmTotal").textContent = money(data.total);
+
+      document.getElementById("form-section").querySelector(".section-head").style.display = "none";
+      document.getElementById("bookingForm").style.display = "none";
+      document.getElementById("confirmBox").classList.add("show");
+      window.scrollTo({ top: document.getElementById("form-section").offsetTop - 20, behavior: "smooth" });
+    } catch (err) {
+      errorBox.textContent = err.message || "ส่งคำขอไม่สำเร็จ กรุณาลองใหม่อีกครั้ง";
+      errorBox.style.display = "block";
+      btn.disabled = false;
+      btn.textContent = "ส่งคำขอจอง";
+      window.scrollTo({ top: document.getElementById("errorMsg").offsetTop - 100, behavior: "smooth" });
+    }
+  });
+
+  loadSettings();
+  loadRooms();
+</script>
+
+</body>
+</html>
