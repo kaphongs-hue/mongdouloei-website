@@ -211,6 +211,89 @@
   }
   .room-card.selected .check{ border-color:var(--amber); background:var(--amber); color:var(--forest-deep); }
 
+  /* ===== ปุ่มดูรูปเพิ่มเติม (gallery) บนการ์ดห้อง ===== */
+  .gallery-btn{
+    position:absolute; bottom:10px; right:12px; z-index:3;
+    display:flex; align-items:center; gap:4px;
+    background:rgba(15,28,20,0.68);
+    color:#fff;
+    border:none;
+    border-radius:20px;
+    padding:5px 10px 5px 8px;
+    font-family:'Prompt',sans-serif;
+    font-size:11.5px;
+    font-weight:600;
+    cursor:pointer;
+    backdrop-filter:blur(2px);
+    transition:background .15s;
+  }
+  .gallery-btn:hover{ background:rgba(15,28,20,0.88); }
+  .gallery-btn svg{ flex-shrink:0; }
+
+  /* ===== Lightbox gallery ===== */
+  .lightbox{
+    position:fixed; inset:0; z-index:100;
+    background:rgba(10,16,12,0.92);
+    display:none;
+    align-items:center; justify-content:center;
+    padding:20px;
+  }
+  .lightbox.show{ display:flex; }
+  .lightbox-inner{
+    position:relative;
+    max-width:640px; width:100%;
+  }
+  .lightbox-img-wrap{
+    position:relative;
+    border-radius:8px;
+    overflow:hidden;
+    background:#000;
+    aspect-ratio:4/3;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .lightbox-img-wrap img{
+    width:100%; height:100%; object-fit:contain;
+    background:#111;
+  }
+  .lightbox-title{
+    color:#fff; text-align:center; font-weight:600; margin-top:14px; font-size:15px;
+  }
+  .lightbox-count{
+    color:var(--mist); text-align:center; font-size:12.5px; margin-top:2px;
+  }
+  .lightbox-close{
+    position:absolute; top:-42px; right:0;
+    width:34px; height:34px; border-radius:50%;
+    background:rgba(255,255,255,0.12);
+    border:none; color:#fff; cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    font-size:18px;
+  }
+  .lightbox-close:hover{ background:rgba(255,255,255,0.22); }
+  .lightbox-nav{
+    position:absolute; top:50%; transform:translateY(-50%);
+    width:40px; height:40px; border-radius:50%;
+    background:rgba(0,0,0,0.45);
+    border:none; color:#fff; cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    transition:background .15s;
+  }
+  .lightbox-nav:hover{ background:rgba(0,0,0,0.7); }
+  .lightbox-prev{ left:8px; }
+  .lightbox-next{ right:8px; }
+  .lightbox-dots{
+    display:flex; justify-content:center; gap:6px; margin-top:12px;
+  }
+  .lightbox-dots span{
+    width:6px; height:6px; border-radius:50%;
+    background:rgba(255,255,255,0.3);
+    transition:background .15s;
+  }
+  .lightbox-dots span.active{ background:var(--amber); }
+  @media (max-width:520px){
+    .lightbox-close{ top:-40px; right:0; }
+  }
+
   /* ===== Form ===== */
   .ledger{
     background:#fff;
@@ -511,6 +594,24 @@
 
 </main>
 
+<div class="lightbox" id="lightbox">
+  <div class="lightbox-inner">
+    <button class="lightbox-close" id="lightboxClose" aria-label="ปิด">✕</button>
+    <div class="lightbox-img-wrap">
+      <button class="lightbox-nav lightbox-prev" id="lightboxPrev" aria-label="รูปก่อนหน้า">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M15 18l-6-6 6-6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+      <img id="lightboxImg" src="" alt="" />
+      <button class="lightbox-nav lightbox-next" id="lightboxNext" aria-label="รูปถัดไป">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+      </button>
+    </div>
+    <div class="lightbox-title" id="lightboxTitle"></div>
+    <div class="lightbox-count" id="lightboxCount"></div>
+    <div class="lightbox-dots" id="lightboxDots"></div>
+  </div>
+</div>
+
 <footer id="footerText">มองดูเลยโฮมสเตย์</footer>
 
 <script type="module">
@@ -654,25 +755,115 @@
     const grid = document.getElementById("roomsGrid");
     grid.innerHTML = rooms.map((r) => {
       const isOccupied = occupiedRoomNames.has(r.name);
+      const images = (r.imageUrls && r.imageUrls.length) ? r.imageUrls : (r.imageUrl ? [r.imageUrl] : []);
+      const galleryBtn = images.length
+        ? `<button type="button" class="gallery-btn" data-id="${r.id}">
+             <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" stroke-width="1.8"/><circle cx="8.5" cy="10" r="1.5" fill="currentColor"/><path d="M21 15l-5-4-4 3-3-2-5 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+             ${images.length > 1 ? `ดูรูป (${images.length})` : "ดูรูปเต็ม"}
+           </button>`
+        : "";
       return `
-        <button type="button" class="room-card ${isOccupied ? "occupied" : ""}" data-id="${r.id}" ${isOccupied ? "disabled" : ""}>
+        <div class="room-card ${isOccupied ? "occupied" : ""}" data-id="${r.id}"
+             role="button" tabindex="${isOccupied ? -1 : 0}" aria-disabled="${isOccupied}">
           <div class="check">✓</div>
           <div class="status-badge ${isOccupied ? "status-occupied" : "status-vacant"}">${isOccupied ? "ไม่ว่างช่วงนี้" : "ว่าง"}</div>
-          ${r.imageUrl
-            ? `<div class="room-photo" style="background-image:url('${r.imageUrl}')"></div>`
+          ${r.imageUrl || (r.imageUrls && r.imageUrls[0])
+            ? `<div class="room-photo" style="background-image:url('${r.imageUrl || r.imageUrls[0]}')"></div>`
             : `<div class="room-photo room-photo-fallback"><span class="emoji">${r.emoji || "🏡"}</span></div>`
           }
+          ${galleryBtn}
           <div class="name">${r.name}</div>
           <div class="meta">พักได้ ${r.capacity || 2} ท่าน</div>
           <div class="price">฿${money(r.price || 0)} <small>/ คืน</small></div>
-        </button>
+        </div>
       `;
     }).join("");
 
     grid.querySelectorAll(".room-card:not(.occupied)").forEach((card) => {
       card.addEventListener("click", () => selectRoom(card.dataset.id));
+      card.addEventListener("keydown", (e) => {
+        if (e.key === "Enter" || e.key === " ") {
+          e.preventDefault();
+          selectRoom(card.dataset.id);
+        }
+      });
+    });
+
+    grid.querySelectorAll(".gallery-btn").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        e.stopPropagation();
+        openLightbox(btn.dataset.id);
+      });
+      btn.addEventListener("keydown", (e) => e.stopPropagation());
     });
   }
+
+  // ---------------- Lightbox: ดูรูปห้องพักหลายรูป ----------------
+  let lightboxImages = [];
+  let lightboxIndex = 0;
+
+  function openLightbox(roomId) {
+    const room = rooms.find((r) => r.id === roomId);
+    if (!room) return;
+    lightboxImages = (room.imageUrls && room.imageUrls.length) ? room.imageUrls : (room.imageUrl ? [room.imageUrl] : []);
+    if (!lightboxImages.length) return;
+    lightboxIndex = 0;
+    document.getElementById("lightboxTitle").textContent = room.name;
+    renderLightboxDots();
+    showLightboxImage();
+    document.getElementById("lightbox").classList.add("show");
+    document.body.style.overflow = "hidden";
+  }
+
+  function closeLightbox() {
+    document.getElementById("lightbox").classList.remove("show");
+    document.body.style.overflow = "";
+  }
+
+  function renderLightboxDots() {
+    const dotsWrap = document.getElementById("lightboxDots");
+    if (lightboxImages.length <= 1) { dotsWrap.innerHTML = ""; return; }
+    dotsWrap.innerHTML = lightboxImages.map((_, i) => `<span data-i="${i}"></span>`).join("");
+    dotsWrap.querySelectorAll("span").forEach((dot) => {
+      dot.addEventListener("click", () => {
+        lightboxIndex = parseInt(dot.dataset.i, 10);
+        showLightboxImage();
+      });
+    });
+  }
+
+  function showLightboxImage() {
+    document.getElementById("lightboxImg").src = lightboxImages[lightboxIndex];
+    const multi = lightboxImages.length > 1;
+    document.getElementById("lightboxCount").textContent = multi ? `${lightboxIndex + 1} / ${lightboxImages.length}` : "";
+    document.getElementById("lightboxPrev").style.display = multi ? "flex" : "none";
+    document.getElementById("lightboxNext").style.display = multi ? "flex" : "none";
+    document.querySelectorAll("#lightboxDots span").forEach((dot, i) => {
+      dot.classList.toggle("active", i === lightboxIndex);
+    });
+  }
+
+  function lightboxNext() {
+    lightboxIndex = (lightboxIndex + 1) % lightboxImages.length;
+    showLightboxImage();
+  }
+  function lightboxPrev() {
+    lightboxIndex = (lightboxIndex - 1 + lightboxImages.length) % lightboxImages.length;
+    showLightboxImage();
+  }
+
+  document.getElementById("lightboxClose").addEventListener("click", closeLightbox);
+  document.getElementById("lightboxNext").addEventListener("click", lightboxNext);
+  document.getElementById("lightboxPrev").addEventListener("click", lightboxPrev);
+  document.getElementById("lightbox").addEventListener("click", (e) => {
+    if (e.target.id === "lightbox") closeLightbox();
+  });
+  document.addEventListener("keydown", (e) => {
+    if (!document.getElementById("lightbox").classList.contains("show")) return;
+    if (e.key === "Escape") closeLightbox();
+    if (e.key === "ArrowRight") lightboxNext();
+    if (e.key === "ArrowLeft") lightboxPrev();
+  });
 
   function selectRoom(id) {
     selectedRoom = rooms.find((r) => r.id === id) || null;
