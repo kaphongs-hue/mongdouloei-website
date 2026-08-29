@@ -227,6 +227,13 @@
     margin-bottom:6px;
   }
   .field .hint{ font-size:12.5px; color:var(--ink-soft); margin-top:5px; }
+  .date-th{
+    font-size:13px;
+    color:var(--forest-deep);
+    font-weight:600;
+    margin-top:6px;
+    min-height:18px;
+  }
   .row2{ display:grid; grid-template-columns:1fr 1fr; gap:14px; }
   input, textarea{
     width:100%;
@@ -407,10 +414,12 @@
         <div class="field">
           <label for="checkIn">วันเช็คอิน</label>
           <input type="date" id="checkIn" required />
+          <div class="date-th" id="checkInDisplay"></div>
         </div>
         <div class="field">
           <label for="checkOut">วันเช็คเอาท์</label>
           <input type="date" id="checkOut" required />
+          <div class="date-th" id="checkOutDisplay"></div>
         </div>
       </div>
     </div>
@@ -540,6 +549,25 @@
   let checkingAvailability = false;
 
   const money = (n) => new Intl.NumberFormat("th-TH").format(Math.round(n));
+
+  // ---------------- แปลงวันที่เป็นรูปแบบไทย "วัน เดือน ปี" (พ.ศ.) ----------------
+  const THAI_MONTHS = [
+    "มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน",
+    "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม",
+  ];
+  function formatThaiDate(dateStr) {
+    if (!dateStr) return "";
+    const [y, m, d] = dateStr.split("-").map(Number);
+    if (!y || !m || !d) return "";
+    const buddhistYear = y + 543;
+    return `${d} ${THAI_MONTHS[m - 1]} ${buddhistYear}`;
+  }
+  function updateThaiDateDisplays() {
+    document.getElementById("checkInDisplay").textContent =
+      formatThaiDate(document.getElementById("checkIn").value);
+    document.getElementById("checkOutDisplay").textContent =
+      formatThaiDate(document.getElementById("checkOut").value);
+  }
 
   // ---------------- โหลดข้อมูลธุรกิจ (ชื่อ, เบอร์ติดต่อ) ----------------
   async function loadSettings() {
@@ -687,10 +715,12 @@
     if (!co.value || new Date(co.value) <= new Date(e.target.value)) {
       co.value = next.toISOString().slice(0, 10);
     }
+    updateThaiDateDisplays();
     refreshAvailability();
     updateSummary();
   });
   document.getElementById("checkOut").addEventListener("change", () => {
+    updateThaiDateDisplays();
     refreshAvailability();
     updateSummary();
   });
