@@ -165,13 +165,32 @@
     border-color:var(--forest);
     box-shadow:0 0 0 2px var(--forest);
   }
-  .room-card::before{
-    content:"";
-    display:block;
-    height:54px;
-    background:linear-gradient(135deg, var(--forest) 0%, var(--forest-soft) 100%);
+  .room-card.occupied{
+    cursor:not-allowed;
+    opacity:0.55;
   }
-  .room-card .emoji{ font-size:24px; position:absolute; top:12px; left:14px; }
+  .room-card.occupied .room-photo,
+  .room-card.occupied .room-photo-fallback{
+    filter:grayscale(0.6);
+  }
+  .status-badge{
+    position:absolute; top:10px; left:14px; z-index:2;
+    font-size:11px; font-weight:700; letter-spacing:.02em;
+    padding:3px 10px; border-radius:20px;
+  }
+  .status-vacant{ background:rgba(46,125,50,0.92); color:#fff; }
+  .status-occupied{ background:rgba(180,67,46,0.92); color:#fff; }
+  .room-photo{
+    height:96px;
+    background-size:cover;
+    background-position:center;
+  }
+  .room-photo-fallback{
+    background:linear-gradient(135deg, var(--forest) 0%, var(--forest-soft) 100%);
+    display:flex; align-items:center; justify-content:flex-start;
+    padding:12px 0 0 14px;
+  }
+  .room-photo-fallback .emoji{ font-size:24px; }
   .room-card .name{ font-weight:700; font-size:15.5px; margin:14px 16px 2px; color:var(--forest-deep); }
   .room-card .meta{ color:var(--ink-soft); font-size:13px; margin:0 16px 12px; }
   .room-card .price{
@@ -307,6 +326,38 @@
     color:var(--amber); text-decoration:none; border-bottom:1px solid rgba(201,138,60,0.4);
   }
 
+  /* ===== Slip upload section ===== */
+  .slip-section{
+    margin-top:22px;
+    padding-top:20px;
+    border-top:1px solid rgba(255,255,255,0.16);
+    text-align:left;
+  }
+  .slip-section h3{ color:#fff; font-size:16px; margin-bottom:6px; }
+  .slip-section .slip-hint{ color:var(--mist); font-size:13px; margin-bottom:14px; }
+  #slipPreviewWrap{ margin-bottom:12px; }
+  #slipPreview{
+    width:100%; max-height:220px; object-fit:cover;
+    border-radius:6px; display:block;
+  }
+  .slip-file-label{
+    display:flex; align-items:center; justify-content:center;
+    border:1.5px dashed rgba(255,255,255,0.35);
+    border-radius:6px;
+    padding:16px;
+    color:var(--mist);
+    font-size:14px;
+    cursor:pointer;
+    margin-bottom:12px;
+    transition:border-color .15s, background .15s;
+  }
+  .slip-file-label:hover{ border-color:var(--amber); background:rgba(255,255,255,0.04); }
+  .slip-btn{
+    background:var(--amber);
+    color:var(--forest-deep);
+  }
+  .slip-btn:disabled{ background:rgba(255,255,255,0.15); color:rgba(255,255,255,0.4); }
+
   footer{
     text-align:center;
     padding:36px 20px 50px;
@@ -346,9 +397,28 @@
 </header>
 
 <main class="wrap">
-  <section id="rooms-section" class="panel">
+  <section id="dates-section" class="panel">
     <div class="section-head">
       <div class="step-num">1</div>
+      <h2>เลือกวันที่เข้าพัก</h2>
+    </div>
+    <div class="ledger">
+      <div class="row2">
+        <div class="field">
+          <label for="checkIn">วันเช็คอิน</label>
+          <input type="date" id="checkIn" required />
+        </div>
+        <div class="field">
+          <label for="checkOut">วันเช็คเอาท์</label>
+          <input type="date" id="checkOut" required />
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="rooms-section" class="panel">
+    <div class="section-head">
+      <div class="step-num">2</div>
       <h2>เลือกห้องพัก</h2>
     </div>
     <div class="rooms-scroll" id="roomsGrid">
@@ -360,21 +430,10 @@
 
   <section id="form-section">
     <div class="section-head">
-      <div class="step-num">2</div>
-      <h2>รายละเอียดการเข้าพัก</h2>
+      <div class="step-num">3</div>
+      <h2>ข้อมูลผู้จอง</h2>
     </div>
     <form class="ledger" id="bookingForm">
-      <div class="row2">
-        <div class="field">
-          <label for="checkIn">วันเช็คอิน</label>
-          <input type="date" id="checkIn" required />
-        </div>
-        <div class="field">
-          <label for="checkOut">วันเช็คเอาท์</label>
-          <input type="date" id="checkOut" required />
-        </div>
-      </div>
-
       <div class="row2">
         <div class="field">
           <label for="guestName">ชื่อผู้จอง</label>
@@ -418,6 +477,25 @@
       <div class="contact">
         <div id="confirmContactText">เจ้าของบ้านจะติดต่อกลับทางเบอร์ที่ให้ไว้เพื่อยืนยันและแจ้งช่องทางโอนมัดจำ</div>
       </div>
+
+      <div class="slip-section">
+        <h3>แนบสลิปโอนเงิน</h3>
+        <p class="slip-hint">โอนมัดจำแล้ว? แนบรูปสลิปตอนนี้เลย เจ้าของบ้านจะตรวจสอบและยืนยันการจองให้เร็วขึ้น (ข้ามขั้นนี้ไปก่อนก็ได้ กลับมาแนบทีหลังผ่านการติดต่อโดยตรง)</p>
+
+        <div id="slipPreviewWrap" style="display:none;">
+          <img id="slipPreview" alt="ตัวอย่างสลิปที่เลือก" />
+        </div>
+
+        <label class="slip-file-label" id="slipFileLabel" for="slipFile">
+          <span id="slipFileLabelText">เลือกรูปสลิป</span>
+        </label>
+        <input type="file" id="slipFile" accept="image/*" capture="environment" style="display:none;" />
+
+        <button type="button" class="btn slip-btn" id="slipUploadBtn" disabled>อัปโหลดสลิป</button>
+        <div class="msg" id="slipMsg"></div>
+        <div class="msg info" id="slipSuccessMsg" style="display:none;">✓ ส่งสลิปแล้ว เจ้าของบ้านจะตรวจสอบและยืนยันการจองเร็วๆ นี้</div>
+      </div>
+
       <a class="home-link" href="index.html">← กลับหน้าแรก</a>
     </div>
   </section>
@@ -430,6 +508,7 @@
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
   import { getFirestore, collection, query, where, orderBy, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
   import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-functions.js";
+  import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-storage.js";
 
   // ---------------------------------------------------------------
   // ตั้งค่า Firebase — เอาค่าจริงมาจาก lib/firebase_options.dart
@@ -448,10 +527,17 @@
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
   const functions = getFunctions(app, "asia-southeast1");
+  const storage = getStorage(app);
   const createPublicBooking = httpsCallable(functions, "createPublicBooking");
+  const attachPaymentSlip = httpsCallable(functions, "attachPaymentSlip");
+  const checkRoomAvailability = httpsCallable(functions, "checkRoomAvailability");
 
   let rooms = [];
   let selectedRoom = null;
+  let createdBookingId = null;
+  let selectedSlipFile = null;
+  let occupiedRoomNames = new Set();
+  let checkingAvailability = false;
 
   const money = (n) => new Intl.NumberFormat("th-TH").format(Math.round(n));
 
@@ -474,7 +560,7 @@
     }
   }
 
-  // ---------------- โหลดรายชื่อห้องพัก ----------------
+  // ---------------- โหลดรายชื่อห้องพัก (แค่โหลดเก็บไว้ ยังไม่ render จนกว่าจะมีวันที่) ----------------
   async function loadRooms() {
     const grid = document.getElementById("roomsGrid");
     try {
@@ -491,23 +577,73 @@
         return;
       }
 
-      grid.innerHTML = rooms.map((r) => `
-        <button type="button" class="room-card" data-id="${r.id}">
-          <div class="check">✓</div>
-          <div class="emoji">${r.emoji || "🏡"}</div>
-          <div class="name">${r.name}</div>
-          <div class="meta">พักได้ ${r.capacity || 2} ท่าน</div>
-          <div class="price">฿${money(r.price || 0)} <small>/ คืน</small></div>
-        </button>
-      `).join("");
-
-      grid.querySelectorAll(".room-card").forEach((card) => {
-        card.addEventListener("click", () => selectRoom(card.dataset.id));
-      });
+      renderPlaceholder();
     } catch (e) {
       grid.innerHTML = `<div class="msg error" style="display:block;">โหลดรายชื่อห้องพักไม่สำเร็จ กรุณารีเฟรชหน้าใหม่อีกครั้ง</div>`;
       console.error(e);
     }
+  }
+
+  function renderPlaceholder() {
+    const grid = document.getElementById("roomsGrid");
+    grid.innerHTML = `<div class="msg info" style="display:block;">เลือกวันเช็คอิน-เช็คเอาท์ด้านบนก่อน เพื่อดูว่าห้องไหนว่างค่ะ</div>`;
+  }
+
+  // ---------------- เช็คห้องว่าง/ไม่ว่าง ทุกครั้งที่เปลี่ยนวันที่ ----------------
+  async function refreshAvailability() {
+    const ci = document.getElementById("checkIn").value;
+    const co = document.getElementById("checkOut").value;
+    const grid = document.getElementById("roomsGrid");
+
+    if (!ci || !co || co <= ci) {
+      renderPlaceholder();
+      return;
+    }
+    if (rooms.length === 0) return; // ยังโหลดห้องไม่เสร็จ
+
+    checkingAvailability = true;
+    grid.innerHTML = `<div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div>`;
+
+    try {
+      const result = await checkRoomAvailability({ checkInDate: ci, checkOutDate: co });
+      occupiedRoomNames = new Set(result.data.occupiedRoomNames || []);
+      renderRoomsGrid();
+
+      // ถ้าห้องที่เลือกไว้เดิมกลายเป็นไม่ว่างช่วงวันที่ใหม่ ให้ยกเลิกการเลือก
+      if (selectedRoom && occupiedRoomNames.has(selectedRoom.name)) {
+        selectedRoom = null;
+        updateSummary();
+      }
+    } catch (e) {
+      grid.innerHTML = `<div class="msg error" style="display:block;">เช็คห้องว่างไม่สำเร็จ กรุณาลองใหม่อีกครั้ง</div>`;
+      console.error(e);
+    } finally {
+      checkingAvailability = false;
+    }
+  }
+
+  function renderRoomsGrid() {
+    const grid = document.getElementById("roomsGrid");
+    grid.innerHTML = rooms.map((r) => {
+      const isOccupied = occupiedRoomNames.has(r.name);
+      return `
+        <button type="button" class="room-card ${isOccupied ? "occupied" : ""}" data-id="${r.id}" ${isOccupied ? "disabled" : ""}>
+          <div class="check">✓</div>
+          <div class="status-badge ${isOccupied ? "status-occupied" : "status-vacant"}">${isOccupied ? "ไม่ว่างช่วงนี้" : "ว่าง"}</div>
+          ${r.imageUrl
+            ? `<div class="room-photo" style="background-image:url('${r.imageUrl}')"></div>`
+            : `<div class="room-photo room-photo-fallback"><span class="emoji">${r.emoji || "🏡"}</span></div>`
+          }
+          <div class="name">${r.name}</div>
+          <div class="meta">พักได้ ${r.capacity || 2} ท่าน</div>
+          <div class="price">฿${money(r.price || 0)} <small>/ คืน</small></div>
+        </button>
+      `;
+    }).join("");
+
+    grid.querySelectorAll(".room-card:not(.occupied)").forEach((card) => {
+      card.addEventListener("click", () => selectRoom(card.dataset.id));
+    });
   }
 
   function selectRoom(id) {
@@ -551,9 +687,13 @@
     if (!co.value || new Date(co.value) <= new Date(e.target.value)) {
       co.value = next.toISOString().slice(0, 10);
     }
+    refreshAvailability();
     updateSummary();
   });
-  document.getElementById("checkOut").addEventListener("change", updateSummary);
+  document.getElementById("checkOut").addEventListener("change", () => {
+    refreshAvailability();
+    updateSummary();
+  });
 
   // ตั้งค่า min วันที่เป็นวันนี้
   const todayStr = new Date().toISOString().slice(0, 10);
@@ -588,6 +728,7 @@
       });
 
       const data = result.data;
+      createdBookingId = data.bookingId;
       document.getElementById("confirmCode").textContent = data.bookingCode;
       document.getElementById("confirmDeposit").textContent = `฿${money(data.expectedDeposit)}`;
       document.getElementById("confirmTotal").textContent = money(data.total);
@@ -602,6 +743,68 @@
       btn.disabled = false;
       btn.textContent = "ส่งคำขอจอง";
       window.scrollTo({ top: document.getElementById("errorMsg").offsetTop - 100, behavior: "smooth" });
+    }
+  });
+
+  // ---------------- อัปโหลดสลิปโอนเงิน ----------------
+  const slipFileInput = document.getElementById("slipFile");
+  const slipFileLabelText = document.getElementById("slipFileLabelText");
+  const slipPreviewWrap = document.getElementById("slipPreviewWrap");
+  const slipPreview = document.getElementById("slipPreview");
+  const slipUploadBtn = document.getElementById("slipUploadBtn");
+  const slipMsg = document.getElementById("slipMsg");
+  const slipSuccessMsg = document.getElementById("slipSuccessMsg");
+
+  slipFileInput.addEventListener("change", (e) => {
+    const file = e.target.files[0];
+    slipMsg.style.display = "none";
+    if (!file) {
+      selectedSlipFile = null;
+      slipUploadBtn.disabled = true;
+      slipPreviewWrap.style.display = "none";
+      return;
+    }
+    if (file.size > 5 * 1024 * 1024) {
+      slipMsg.textContent = "ไฟล์ใหญ่เกิน 5MB กรุณาเลือกรูปที่เล็กกว่านี้";
+      slipMsg.style.display = "block";
+      selectedSlipFile = null;
+      slipUploadBtn.disabled = true;
+      return;
+    }
+    selectedSlipFile = file;
+    slipFileLabelText.textContent = file.name;
+    slipUploadBtn.disabled = false;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      slipPreview.src = ev.target.result;
+      slipPreviewWrap.style.display = "block";
+    };
+    reader.readAsDataURL(file);
+  });
+
+  slipUploadBtn.addEventListener("click", async () => {
+    if (!selectedSlipFile || !createdBookingId) return;
+    slipMsg.style.display = "none";
+    slipUploadBtn.disabled = true;
+    slipUploadBtn.textContent = "กำลังอัปโหลด...";
+
+    try {
+      const ext = (selectedSlipFile.name.split(".").pop() || "jpg").toLowerCase();
+      const filePath = `slips/${createdBookingId}/${Date.now()}.${ext}`;
+      const storageRef = ref(storage, filePath);
+      await uploadBytes(storageRef, selectedSlipFile, { contentType: selectedSlipFile.type });
+      const downloadUrl = await getDownloadURL(storageRef);
+
+      await attachPaymentSlip({ bookingId: createdBookingId, slipUrl: downloadUrl });
+
+      document.getElementById("slipFileLabel").style.display = "none";
+      slipUploadBtn.style.display = "none";
+      slipSuccessMsg.style.display = "block";
+    } catch (err) {
+      slipMsg.textContent = err.message || "อัปโหลดสลิปไม่สำเร็จ กรุณาลองใหม่อีกครั้ง";
+      slipMsg.style.display = "block";
+      slipUploadBtn.disabled = false;
+      slipUploadBtn.textContent = "อัปโหลดสลิป";
     }
   });
 
