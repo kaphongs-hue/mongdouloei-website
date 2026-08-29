@@ -253,6 +253,15 @@ section.alt{background:var(--cream-deep);}
   font-size:12px; letter-spacing:.16em; text-transform:uppercase; color:var(--amber); margin-bottom:8px;
 }
 .contact-box .addr{font-size:14.5px; color:var(--mist); max-width:420px;}
+.phone-line{
+  display:flex; align-items:center; gap:8px;
+  margin-top:14px; color:var(--amber);
+}
+.phone-line a{
+  color:var(--amber); text-decoration:none; font-weight:600; font-size:15.5px;
+  font-family:'JetBrains Mono', monospace;
+}
+.phone-line a:hover{ text-decoration:underline; }
 .contact-box .btns{ display:flex; gap:12px; flex-wrap:wrap; }
 .contact-box a.btn{
   display:inline-block; background:var(--amber); color:var(--forest-deep);
@@ -464,9 +473,14 @@ footer a{text-decoration:underline; margin:0 8px; color:var(--ink-soft);}
           110 หมู่ 2 บ้านไหตาก ต.ลาดค่าง อ.ภูเรือ จ.เลย 42160<br>
           เปิดให้บริการทุกวัน · จองออนไลน์ได้ตลอด 24 ชั่วโมง
         </div>
+        <div class="phone-line" id="phoneLine" style="display:none;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6 19.79 19.79 0 01-3.07-8.67A2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.362 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.338 1.85.573 2.81.7A2 2 0 0122 16.92z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          <a href="#" id="phoneLink"></a>
+        </div>
       </div>
       <div class="btns">
         <a class="btn" href="booking.html">จองห้องพักออนไลน์</a>
+        <a class="btn ghost" id="callBtn" href="#" style="display:none;">โทรเลย</a>
         <a class="btn ghost" href="https://m.me/Hitakland" target="_blank" rel="noopener">ทักแชท Messenger</a>
       </div>
     </div>
@@ -488,7 +502,7 @@ footer a{text-decoration:underline; margin:0 8px; color:var(--ink-soft);}
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
-  import { getFirestore, collection, query, where, orderBy, getDocs } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+  import { getFirestore, collection, query, where, orderBy, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
 
   // ---------------------------------------------------------------
   // ตั้งค่า Firebase — ใช้ค่าเดียวกับที่ใส่ใน booking.html
@@ -507,6 +521,32 @@ footer a{text-decoration:underline; margin:0 8px; color:var(--ink-soft);}
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
   const money = (n) => new Intl.NumberFormat("th-TH").format(Math.round(n));
+
+  // ดึงเบอร์ติดต่อจาก settings/app (collection เดียวกับที่แอปแอดมิน/หน้าจอง
+  // booking.html ใช้) — เปลี่ยนเบอร์ในแอปแล้วเว็บอัปเดตตามอัตโนมัติ
+  async function loadSettings() {
+    try {
+      const snap = await getDoc(doc(db, "settings", "app"));
+      if (snap.exists()) {
+        const s = snap.data();
+        if (s.contactPhone) {
+          const phoneLine = document.getElementById("phoneLine");
+          const phoneLink = document.getElementById("phoneLink");
+          const telHref = `tel:${s.contactPhone.replace(/[^0-9+]/g, "")}`;
+          phoneLink.textContent = s.contactPhone;
+          phoneLink.href = telHref;
+          phoneLine.style.display = "flex";
+
+          const callBtn = document.getElementById("callBtn");
+          callBtn.href = telHref;
+          callBtn.style.display = "inline-block";
+        }
+      }
+    } catch (e) {
+      console.warn("โหลดเบอร์ติดต่อไม่สำเร็จ", e);
+    }
+  }
+  loadSettings();
 
   // ดึงรายชื่อห้องพักที่เปิดใช้งานจริงจากระบบจอง (collection เดียวกับแอปแอดมิน
   // และหน้าจอง booking.html) — ห้องพักในหน้านี้จะตรงกับระบบจริงเสมอ ไม่ต้อง
@@ -528,10 +568,15 @@ footer a{text-decoration:underline; margin:0 8px; color:var(--ink-soft);}
         return;
       }
 
-      grid.innerHTML = rooms.map((r, i) => `
+      grid.innerHTML = rooms.map((r, i) => {
+        // เช็ค imageUrls (array หลายรูป) ก่อน แล้วค่อย fallback ไปที่ imageUrl
+        // (รูปเดี่ยวเดิม) กันปัญหากรณี imageUrl ตัวเดียวชี้ไปไฟล์ที่ถูกลบ/แทนที่
+        // ไปแล้วตอนอัปเดตเป็นรูปหลายใบ
+        const cover = (r.imageUrls && r.imageUrls.length) ? r.imageUrls[0] : r.imageUrl;
+        return `
         <div class="card card-pop" style="animation-delay:${i * 0.08}s">
-          <div class="photo" ${r.imageUrl ? `style="background-image:url('${r.imageUrl}');"` : ""}>
-            ${r.imageUrl ? "" : `<span class="room-emoji">${r.emoji || "🏡"}</span>`}
+          <div class="photo" ${cover ? `style="background-image:url('${cover}');"` : ""}>
+            ${cover ? "" : `<span class="room-emoji">${r.emoji || "🏡"}</span>`}
           </div>
           <div class="card-body">
             <h3>${r.name}</h3>
@@ -542,7 +587,8 @@ footer a{text-decoration:underline; margin:0 8px; color:var(--ink-soft);}
             </div>
           </div>
         </div>
-      `).join("");
+      `;
+      }).join("");
     } catch (e) {
       grid.innerHTML = `<p style="grid-column:1/-1;text-align:center;color:var(--ink-soft);">
         โหลดข้อมูลห้องพักไม่สำเร็จ <a href="booking.html" style="color:var(--forest-deep);text-decoration:underline;">ดูห้องว่างที่หน้าจอง</a></p>`;
