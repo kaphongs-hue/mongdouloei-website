@@ -68,7 +68,7 @@
     .nav-links{display:flex;align-items:center;gap:24px}.nav-links>a:not(.btn){text-decoration:none;font-size:.92rem}.nav-links>a:not(.btn):hover{color:var(--gold-700)}
     .menu-btn{display:none;border:1px solid var(--line);background:var(--white);border-radius:10px;width:44px;height:44px;color:var(--forest-900)}
 
-    .hero{position:relative;min-height:min(790px,88vh);display:grid;place-items:center;overflow:hidden;color:var(--white);background:linear-gradient(90deg,rgba(10,22,15,.86),rgba(10,22,15,.43)),url('assets/images/room-placeholder.svg') center/cover,var(--forest-900)}
+    .hero{position:relative;min-height:min(790px,88vh);display:grid;place-items:center;overflow:hidden;color:var(--white);background:linear-gradient(90deg,rgba(10,22,15,.86),rgba(10,22,15,.43)),url('https://firebasestorage.googleapis.com/v0/b/booking-f90a4.firebasestorage.app/o/rooms%2Fbaan-mong-du-thoe%2Fthoe-01.jpg?alt=media') center/cover,var(--forest-900)}
     .hero::after{content:"";position:absolute;inset:auto 0 0;height:100px;background:linear-gradient(to top,var(--cream),transparent)}
     .hero-content{position:relative;z-index:2;padding:92px 0 130px;max-width:850px;margin-right:auto}.hero .eyebrow{color:var(--gold-100)}.hero h1{color:var(--white);text-wrap:balance}.hero .lead{font-size:clamp(1.05rem,2vw,1.35rem);max-width:680px;margin:20px 0 28px;color:#f5f1e9}
     .hero-actions{display:flex;flex-wrap:wrap;gap:12px}.trust-chips{display:flex;flex-wrap:wrap;gap:9px;margin-top:28px}.chip{display:inline-flex;gap:7px;align-items:center;padding:7px 12px;border:1px solid rgba(255,255,255,.3);border-radius:999px;background:rgba(15,28,20,.42);font-size:.86rem;backdrop-filter:blur(6px)}
@@ -188,7 +188,11 @@
     const els = {grid:document.querySelector('#roomsGrid'),count:document.querySelector('#activeRoomCount'),mobilePrice:document.querySelector('#mobilePrice')};
     let galleryImages=[];let galleryIndex=0;let lastFocus=null;
 
-    const cleanUrl = (value, fallback='') => { try { const url=new URL(String(value),location.href); return ['http:','https:'].includes(url.protocol)?url.href:fallback; } catch { return fallback; } };
+    const cleanUrl = (value, fallback='') => {
+      const raw=value==null?'':String(value).trim();
+      if(!raw||raw==='undefined'||raw==='null')return fallback;
+      try{const url=new URL(raw);return ['http:','https:'].includes(url.protocol)?url.href:fallback}catch{return fallback}
+    };
     const money = value => Number.isFinite(Number(value)) ? new Intl.NumberFormat('th-TH',{style:'currency',currency:'THB',maximumFractionDigits:0}).format(Number(value)) : 'สอบถามราคา';
     const bookingUrl = id => `booking.html?room=${encodeURIComponent(id)}`;
     const setText = (selector,value) => { const el=document.querySelector(selector); if(el && value!=null && String(value).trim()) el.textContent=String(value).trim(); };
@@ -231,7 +235,7 @@
       setText('#checkInTime',s.checkInTime);setText('#checkOutTime',s.checkOutTime);setText('#addressText',s.address);setText('#contactAddress',s.address);
       const map=cleanUrl(s.mapUrl);const mapLink=document.querySelector('#mapLink');if(map){mapLink.href=map;mapLink.target='_blank';mapLink.rel='noopener noreferrer'}
       const messenger=cleanUrl(s.messengerUrl);if(messenger)document.querySelectorAll('.js-messenger').forEach(a=>{a.href=messenger;a.target='_blank';a.rel='noopener noreferrer'});
-      const digits=String(s.contactPhone||'').replace(/[^+\d]/g,'');const phone=document.querySelector('#phoneLink');if(digits){phone.hidden=false;phone.href=`tel:${digits}`;phone.textContent=`โทร ${s.contactPhone}`}
+      const phoneMatch=String(s.contactPhone||'').match(/(?:\+66|0)[\d\s-]{8,13}/);const phone=document.querySelector('#phoneLink');if(phoneMatch){const digits=phoneMatch[0].replace(/[^+\d]/g,'');phone.hidden=false;phone.href=`tel:${digits}`;phone.textContent=`โทร ${s.contactPhone}`}
       const schema=document.querySelector('#lodgingSchema');try{const data=JSON.parse(schema.textContent);if(s.contactPhone)data.telephone=String(s.contactPhone);if(s.address)data.address.streetAddress=String(s.address);schema.textContent=JSON.stringify(data)}catch{}
     }
 

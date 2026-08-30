@@ -65,7 +65,7 @@
     overflow:hidden;
     background:
       linear-gradient(175deg, rgba(15,28,20,0.80) 0%, rgba(27,46,33,0.68) 55%, rgba(15,28,20,0.90) 100%),
-      url('hero-view.jpg') center 42% / cover no-repeat;
+      url('https://firebasestorage.googleapis.com/v0/b/booking-f90a4.firebasestorage.app/o/rooms%2Fbaan-mong-du-thoe%2Fthoe-01.jpg?alt=media') center 42% / cover no-repeat;
     padding:52px 20px 96px;
     text-align:center;
     color:var(--cream);
@@ -186,7 +186,10 @@
     background-position:center;
   }
   .room-photo-fallback{
-    background:linear-gradient(135deg, var(--forest) 0%, var(--forest-soft) 100%);
+    background:
+      linear-gradient(135deg, rgba(27,46,33,.38), rgba(15,28,20,.68)),
+      url('assets/images/room-placeholder.svg') center / cover no-repeat,
+      var(--forest);
     display:flex; align-items:center; justify-content:flex-start;
     padding:12px 0 0 14px;
   }
@@ -648,6 +651,14 @@
   const requestedRoomId = new URLSearchParams(window.location.search).get("room");
 
   const money = (n) => new Intl.NumberFormat("th-TH").format(Math.round(n));
+  const escapeHtml = (value) => String(value ?? "").replace(/[&<>'"]/g, (char) => ({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[char]));
+  const safeImageUrl = (value) => {
+    if (value == null) return "";
+    try {
+      const url = new URL(String(value).trim());
+      return ["https:", "http:"].includes(url.protocol) ? url.href : "";
+    } catch { return ""; }
+  };
 
   // ---------------- แปลงวันที่เป็นรูปแบบไทย "วัน เดือน ปี" (พ.ศ.) ----------------
   const THAI_MONTHS = [
@@ -753,25 +764,30 @@
     const grid = document.getElementById("roomsGrid");
     grid.innerHTML = rooms.map((r) => {
       const isOccupied = occupiedRoomNames.has(r.name);
-      const images = (r.imageUrls && r.imageUrls.length) ? r.imageUrls : (r.imageUrl ? [r.imageUrl] : []);
+      const images = (Array.isArray(r.imageUrls) ? r.imageUrls : []).map(safeImageUrl).filter(Boolean);
+      const singleImage = safeImageUrl(r.imageUrl);
+      if (!images.length && singleImage) images.push(singleImage);
+      const safeId = escapeHtml(r.id);
+      const safeName = escapeHtml(r.name || "ห้องพัก");
+      const capacity = Number.isFinite(Number(r.capacity)) ? Number(r.capacity) : 2;
       const galleryBtn = images.length
-        ? `<button type="button" class="gallery-btn" data-id="${r.id}">
+        ? `<button type="button" class="gallery-btn" data-id="${safeId}">
              <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" stroke-width="1.8"/><circle cx="8.5" cy="10" r="1.5" fill="currentColor"/><path d="M21 15l-5-4-4 3-3-2-5 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
              ${images.length > 1 ? `ดูรูป (${images.length})` : "ดูรูปเต็ม"}
            </button>`
         : "";
       return `
-        <div class="room-card ${isOccupied ? "occupied" : ""}" data-id="${r.id}"
+        <div class="room-card ${isOccupied ? "occupied" : ""}" data-id="${safeId}"
              role="button" tabindex="${isOccupied ? -1 : 0}" aria-disabled="${isOccupied}">
           <div class="check">✓</div>
           <div class="status-badge ${isOccupied ? "status-occupied" : "status-vacant"}">${isOccupied ? "ไม่ว่างช่วงนี้" : "ว่าง"}</div>
-          ${r.imageUrl || (r.imageUrls && r.imageUrls[0])
-            ? `<div class="room-photo" style="background-image:url('${r.imageUrl || r.imageUrls[0]}')"></div>`
-            : `<div class="room-photo room-photo-fallback"><span class="emoji">${r.emoji || "🏡"}</span></div>`
+          ${images.length
+            ? `<div class="room-photo" style="background-image:url('${escapeHtml(images[0])}')" role="img" aria-label="รูป ${safeName}"></div>`
+            : `<div class="room-photo room-photo-fallback" role="img" aria-label="กำลังอัปเดตรูป ${safeName}"><span class="emoji">${escapeHtml(r.emoji || "🏡")}</span></div>`
           }
           ${galleryBtn}
-          <div class="name">${r.name}</div>
-          <div class="meta">พักได้ ${r.capacity || 2} ท่าน</div>
+          <div class="name">${safeName}</div>
+          <div class="meta">พักได้ ${capacity} ท่าน</div>
           <div class="price">฿${money(r.price || 0)} <small>/ คืน</small></div>
         </div>
       `;
@@ -808,7 +824,9 @@
   function openLightbox(roomId) {
     const room = rooms.find((r) => r.id === roomId);
     if (!room) return;
-    lightboxImages = (room.imageUrls && room.imageUrls.length) ? room.imageUrls : (room.imageUrl ? [room.imageUrl] : []);
+    lightboxImages = (Array.isArray(room.imageUrls) ? room.imageUrls : []).map(safeImageUrl).filter(Boolean);
+    const singleImage = safeImageUrl(room.imageUrl);
+    if (!lightboxImages.length && singleImage) lightboxImages.push(singleImage);
     if (!lightboxImages.length) return;
     lightboxIndex = 0;
     document.getElementById("lightboxTitle").textContent = room.name;
