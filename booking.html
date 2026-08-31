@@ -65,7 +65,7 @@
     overflow:hidden;
     background:
       linear-gradient(175deg, rgba(15,28,20,0.80) 0%, rgba(27,46,33,0.68) 55%, rgba(15,28,20,0.90) 100%),
-      url('https://firebasestorage.googleapis.com/v0/b/booking-f90a4.firebasestorage.app/o/rooms%2Fbaan-mong-du-thoe%2Fthoe-01.jpg?alt=media') center 42% / cover no-repeat;
+      url('hero-mongdoolei.jpg') center 52% / cover no-repeat;
     padding:52px 20px 96px;
     text-align:center;
     color:var(--cream);
@@ -188,7 +188,7 @@
   .room-photo-fallback{
     background:
       linear-gradient(135deg, rgba(27,46,33,.38), rgba(15,28,20,.68)),
-      url('assets/images/room-placeholder.svg') center / cover no-repeat,
+      url('room-placeholder.svg') center / cover no-repeat,
       var(--forest);
     display:flex; align-items:center; justify-content:flex-start;
     padding:12px 0 0 14px;
@@ -651,6 +651,8 @@
   const requestedRoomId = new URLSearchParams(window.location.search).get("room");
 
   const money = (n) => new Intl.NumberFormat("th-TH").format(Math.round(n));
+  const HIDDEN_PUBLIC_IMAGES = ["thoe-01.jpg", "thoe-02.jpg", "thoe-06.jpg", "thoe-08.jpg"];
+  const isSuitablePublicImage = (value) => !HIDDEN_PUBLIC_IMAGES.some((name) => String(value || "").toLowerCase().includes(name));
   const escapeHtml = (value) => String(value ?? "").replace(/[&<>'"]/g, (char) => ({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[char]));
   const safeImageUrl = (value) => {
     if (value == null) return "";
@@ -764,8 +766,8 @@
     const grid = document.getElementById("roomsGrid");
     grid.innerHTML = rooms.map((r) => {
       const isOccupied = occupiedRoomNames.has(r.name);
-      const images = (Array.isArray(r.imageUrls) ? r.imageUrls : []).map(safeImageUrl).filter(Boolean);
-      const singleImage = safeImageUrl(r.imageUrl);
+      const images = (Array.isArray(r.imageUrls) ? r.imageUrls : []).filter(isSuitablePublicImage).map(safeImageUrl).filter(Boolean);
+      const singleImage = isSuitablePublicImage(r.imageUrl) ? safeImageUrl(r.imageUrl) : "";
       if (!images.length && singleImage) images.push(singleImage);
       const safeId = escapeHtml(r.id);
       const safeName = escapeHtml(r.name || "ห้องพัก");
@@ -824,8 +826,8 @@
   function openLightbox(roomId) {
     const room = rooms.find((r) => r.id === roomId);
     if (!room) return;
-    lightboxImages = (Array.isArray(room.imageUrls) ? room.imageUrls : []).map(safeImageUrl).filter(Boolean);
-    const singleImage = safeImageUrl(room.imageUrl);
+    lightboxImages = (Array.isArray(room.imageUrls) ? room.imageUrls : []).filter(isSuitablePublicImage).map(safeImageUrl).filter(Boolean);
+    const singleImage = isSuitablePublicImage(room.imageUrl) ? safeImageUrl(room.imageUrl) : "";
     if (!lightboxImages.length && singleImage) lightboxImages.push(singleImage);
     if (!lightboxImages.length) return;
     lightboxIndex = 0;

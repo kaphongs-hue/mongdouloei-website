@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 750" role="img" aria-labelledby="title desc">
+  <title id="title">รูปห้องพักกำลังอัปเดต</title><desc id="desc">ภาพแทนสีเขียวครีมรูปภูเขา</desc>
+  <rect width="1200" height="750" fill="#eee6d5"/><circle cx="920" cy="170" r="74" fill="#c98a3c" opacity=".7"/>
+  <path d="M0 590 280 290l170 170 185-245 270 340 130-150 165 185v160H0z" fill="#294431"/><path d="M0 640 300 440l170 130 220-190 250 210 150-90 110 80v170H0z" fill="#142419" opacity=".9"/>
+  <text x="600" y="690" text-anchor="middle" fill="#f7f2e7" font-family="sans-serif" font-size="34">มองดูเลยโฮมสเตย์ · กำลังอัปเดตรูป</text>
+</svg>
