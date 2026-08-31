@@ -646,7 +646,7 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
-  import { getFirestore, collection, query, where, getDocs, doc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+  import { getFirestore, collection, query, where, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
   import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-functions.js";
 
   const firebaseConfig = {
@@ -665,16 +665,18 @@
   const createPublicBooking = httpsCallable(functions, "createPublicBooking");
   const checkRoomAvailability = httpsCallable(functions, "checkRoomAvailability");
   const generatePromptPayQR = httpsCallable(functions, "generatePromptPayQR");
+  const getPublicPaymentStatus = httpsCallable(functions, "getPublicPaymentStatus");
 
   let rooms = [];
   let selectedRoom = null;
   let createdBookingId = null;
   let occupiedRoomNames = new Set();
   let checkingAvailability = false;
-  let paymentUnsubscribe = null;
+  let paymentPollTimer = null;
   const requestedRoomId = new URLSearchParams(window.location.search).get("room");
 
   const money = (n) => new Intl.NumberFormat("th-TH").format(Math.round(n));
+  const moneyExact = (n) => new Intl.NumberFormat("th-TH", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(n));
   const HIDDEN_PUBLIC_IMAGES = ["thoe-01.jpg", "thoe-02.jpg", "thoe-06.jpg", "thoe-08.jpg"];
   const isSuitablePublicImage = (value) => !HIDDEN_PUBLIC_IMAGES.some((name) => String(value || "").toLowerCase().includes(name));
   const escapeHtml = (value) => String(value ?? "").replace(/[&<>'"]/g, (char) => ({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[char]));
@@ -1041,7 +1043,7 @@
       const result = await generatePromptPayQR({ bookingId: createdBookingId });
       const data = result.data;
       qrImage.src = data.qrDataUrl;
-      qrAmount.textContent = money(data.amount);
+      qrAmount.textContent = moneyExact(data.amount);
       qrLoading.style.display = "none";
       qrContent.style.display = "block";
     } catch (err) {
@@ -1055,30 +1057,33 @@
 
   function listenForPaymentConfirmation() {
     if (!createdBookingId) return;
-    if (paymentUnsubscribe) paymentUnsubscribe();
-
-    paymentUnsubscribe = onSnapshot(
-      doc(db, "bookings", createdBookingId),
-      (snap) => {
-        if (!snap.exists()) return;
-        const b = snap.data();
-        if (b.status === "มัดจำแล้ว") {
+    if (paymentPollTimer) clearTimeout(paymentPollTimer);
+    let failures = 0;
+    const poll = async () => {
+      try {
+        const { data } = await getPublicPaymentStatus({ bookingId: createdBookingId });
+        failures = 0;
+        if (data.confirmed) {
           qrContent.style.display = "block";
           qrLoading.style.display = "none";
           qrStatus.classList.add("confirmed");
           qrStatus.querySelector(".dot")?.remove();
           qrStatusText.textContent = "✓ ได้รับเงินมัดจำแล้ว การจองของคุณยืนยันสมบูรณ์!";
-          if (paymentUnsubscribe) {
-            paymentUnsubscribe();
-            paymentUnsubscribe = null;
-          }
+          paymentPollTimer = null;
+          return;
         }
-      },
-      (err) => {
+      } catch (err) {
+        failures += 1;
         console.error("payment listener error:", err);
       }
-    );
+      paymentPollTimer = setTimeout(poll, failures ? Math.min(30000, 5000 * failures) : 5000);
+    };
+    poll();
   }
+
+  window.addEventListener("beforeunload", () => {
+    if (paymentPollTimer) clearTimeout(paymentPollTimer);
+  });
 
   loadSettings();
   loadRooms();

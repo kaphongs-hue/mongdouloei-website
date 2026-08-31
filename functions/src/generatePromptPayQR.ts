@@ -71,6 +71,7 @@ export const generatePromptPayQR = onCall(
     return { qrDataUrl, amount, expiresInSeconds: PAYMENT_TTL_MS / 1000 };
   }
 );
+
 // ใช้แทนการเปิด read bookings ให้เว็บไซต์ จึงไม่เผยข้อมูลส่วนตัวของผู้จอง
 export const getPublicPaymentStatus = onCall(
   { region: "asia-southeast1" },
@@ -81,3 +82,4 @@ export const getPublicPaymentStatus = onCall(
     return { confirmed: snap.get("status") === "มัดจำแล้ว" };
   }
 );
+
