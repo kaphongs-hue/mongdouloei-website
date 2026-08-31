@@ -161,26 +161,43 @@ export const paynoiWebhook = onRequest(
     const eventId = createHash("sha256").update(`paynoi:${transId}`).digest("hex");
     const eventRef = db.collection("paymentEvents").doc(eventId);
     const previous = await eventRef.get();
-    if (previous.exists && previous.get("outcome") === "confirmed") { json(res, 200, 1); return; }
-
-    const matches = await db.collection("bookings")
-      .where("paymentAmountSatang", "==", amountSatang)
-      .where("status", "==", "รอมัดจำ").limit(2).get();
-    if (matches.size !== 1) {
-      await eventRef.set({ provider: "paynoi_line", transId, amountSatang,
-        bankAccount: data.bankaccount || null, transactionDate: data.date || null,
-        outcome: matches.empty ? "unmatched" : "ambiguous", payload: data,
-        receivedAt: FieldValue.serverTimestamp() }, { merge: true });
+    if (previous.exists && previous.get("outcome") === "confirmed") {
+      console.info("Paynoi payment processed", { eventId, outcome: "duplicate" });
       json(res, 200, 1); return;
     }
 
-    const bookingRef = matches.docs[0].ref;
-    await db.runTransaction(async (tx) => {
+    // รองรับทั้ง booking รุ่นใหม่ (integer satang) และรุ่นเดิม (number บาท)
+    // ใช้ single-field queries เพื่อไม่ให้ webhook ล้มเพราะ composite index ยังสร้างไม่เสร็จ
+    const [newMatches, legacyMatches] = await Promise.all([
+      db.collection("bookings").where("paymentAmountSatang", "==", amountSatang).limit(10).get(),
+      db.collection("bookings").where("paymentUniqueAmount", "==", amountSatang / 100).limit(10).get(),
+    ]);
+    const pendingById = new Map<string, FirebaseFirestore.QueryDocumentSnapshot>();
+    for (const doc of [...newMatches.docs, ...legacyMatches.docs]) {
+      if (doc.get("status") === "รอมัดจำ") pendingById.set(doc.id, doc);
+    }
+    const matches = [...pendingById.values()];
+    if (matches.length !== 1) {
+      await eventRef.set({ provider: "paynoi_line", transId, amountSatang,
+        bankAccount: data.bankaccount || null, transactionDate: data.date || null,
+        outcome: matches.length === 0 ? "unmatched" : "ambiguous", payload: data,
+        receivedAt: FieldValue.serverTimestamp() }, { merge: true });
+      console.warn("Paynoi payment not uniquely matched", {
+        eventId, amountSatang, matchCount: matches.length,
+      });
+      json(res, 200, 1); return;
+    }
+
+    const bookingRef = matches[0].ref;
+    const outcome = await db.runTransaction(async (tx) => {
       const event = await tx.get(eventRef);
-      if (event.exists && event.get("outcome") === "confirmed") return;
+      if (event.exists && event.get("outcome") === "confirmed") return "duplicate";
       const snap = await tx.get(bookingRef);
-      if (!snap.exists || snap.get("status") !== "รอมัดจำ" ||
-          snap.get("paymentAmountSatang") !== amountSatang) return;
+      if (!snap.exists) return "stale";
+      const storedSatang = snap.get("paymentAmountSatang");
+      const storedLegacyAmount = snap.get("paymentUniqueAmount");
+      if (snap.get("status") !== "รอมัดจำ" ||
+          (storedSatang !== amountSatang && storedLegacyAmount !== amountSatang / 100)) return "stale";
       const booking = snap.data()!;
       tx.update(bookingRef, { status: "มัดจำแล้ว", paidDeposit: amountSatang / 100,
         paymentConfirmedAt: FieldValue.serverTimestamp(), paymentBankRef: transId,
@@ -194,7 +211,9 @@ export const paynoiWebhook = onRequest(
         bookingCode: booking.bookingCode || null, action: "status_changed",
         note: `ยืนยันมัดจำอัตโนมัติผ่าน Paynoi LINE Connect (${(amountSatang / 100).toFixed(2)} บาท)`,
         performedBy: "system:paynoi_webhook", createdAt: FieldValue.serverTimestamp() });
+      return "confirmed";
     });
+    console.info("Paynoi payment processed", { eventId, bookingId: bookingRef.id, outcome });
     json(res, 200, 1);
   }
 );
