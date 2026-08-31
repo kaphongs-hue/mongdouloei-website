@@ -661,6 +661,15 @@
       return ["https:", "http:"].includes(url.protocol) ? url.href : "";
     } catch { return ""; }
   };
+  const roomImageList = (room) => {
+    const values = [];
+    if (room.coverImageUrl) values.push(room.coverImageUrl);
+    if (Array.isArray(room.galleryImageUrls)) values.push(...room.galleryImageUrls);
+    if (Array.isArray(room.imageUrls)) values.push(...room.imageUrls);
+    if (Array.isArray(room.images)) values.push(...room.images.map((item) => typeof item === "string" ? item : item?.url || item?.src));
+    if (room.imageUrl) values.push(room.imageUrl);
+    return [...new Set(values.filter(isSuitablePublicImage).map(safeImageUrl).filter(Boolean))];
+  };
 
   // ---------------- แปลงวันที่เป็นรูปแบบไทย "วัน เดือน ปี" (พ.ศ.) ----------------
   const THAI_MONTHS = [
@@ -766,9 +775,7 @@
     const grid = document.getElementById("roomsGrid");
     grid.innerHTML = rooms.map((r) => {
       const isOccupied = occupiedRoomNames.has(r.name);
-      const images = (Array.isArray(r.imageUrls) ? r.imageUrls : []).filter(isSuitablePublicImage).map(safeImageUrl).filter(Boolean);
-      const singleImage = isSuitablePublicImage(r.imageUrl) ? safeImageUrl(r.imageUrl) : "";
-      if (!images.length && singleImage) images.push(singleImage);
+      const images = roomImageList(r);
       const safeId = escapeHtml(r.id);
       const safeName = escapeHtml(r.name || "ห้องพัก");
       const capacity = Number.isFinite(Number(r.capacity)) ? Number(r.capacity) : 2;
@@ -826,9 +833,7 @@
   function openLightbox(roomId) {
     const room = rooms.find((r) => r.id === roomId);
     if (!room) return;
-    lightboxImages = (Array.isArray(room.imageUrls) ? room.imageUrls : []).filter(isSuitablePublicImage).map(safeImageUrl).filter(Boolean);
-    const singleImage = isSuitablePublicImage(room.imageUrl) ? safeImageUrl(room.imageUrl) : "";
-    if (!lightboxImages.length && singleImage) lightboxImages.push(singleImage);
+    lightboxImages = roomImageList(room);
     if (!lightboxImages.length) return;
     lightboxIndex = 0;
     document.getElementById("lightboxTitle").textContent = room.name;
