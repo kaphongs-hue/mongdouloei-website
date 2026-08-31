@@ -420,37 +420,59 @@
     color:var(--amber); text-decoration:none; border-bottom:1px solid rgba(201,138,60,0.4);
   }
 
-  /* ===== Slip upload section ===== */
-  .slip-section{
+  /* ===== PromptPay QR section ===== */
+  .qr-section{
     margin-top:22px;
     padding-top:20px;
     border-top:1px solid rgba(255,255,255,0.16);
-    text-align:left;
+    text-align:center;
   }
-  .slip-section h3{ color:#fff; font-size:16px; margin-bottom:6px; }
-  .slip-section .slip-hint{ color:var(--mist); font-size:13px; margin-bottom:14px; }
-  #slipPreviewWrap{ margin-bottom:12px; }
-  #slipPreview{
-    width:100%; max-height:220px; object-fit:cover;
-    border-radius:6px; display:block;
-  }
-  .slip-file-label{
-    display:flex; align-items:center; justify-content:center;
-    border:1.5px dashed rgba(255,255,255,0.35);
-    border-radius:6px;
-    padding:16px;
-    color:var(--mist);
-    font-size:14px;
-    cursor:pointer;
+  .qr-section h3{ color:#fff; font-size:16px; margin-bottom:6px; }
+  .qr-section .qr-hint{ color:var(--mist); font-size:13px; margin-bottom:16px; }
+  .qr-image-wrap{
+    background:#fff;
+    border-radius:10px;
+    padding:14px;
+    display:inline-block;
     margin-bottom:12px;
-    transition:border-color .15s, background .15s;
   }
-  .slip-file-label:hover{ border-color:var(--amber); background:rgba(255,255,255,0.04); }
-  .slip-btn{
+  #qrImage{ width:220px; height:220px; display:block; }
+  .qr-amount-label{ color:var(--mist); font-size:13px; margin-bottom:2px; }
+  .qr-amount{
+    font-family:'JetBrains Mono',monospace;
+    font-size:26px;
+    font-weight:600;
+    color:var(--amber);
+    margin-bottom:14px;
+  }
+  .qr-amount .baht-sign{ font-size:16px; margin-right:2px; }
+  .qr-status{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    font-size:13.5px;
+    color:var(--mist);
+    background:rgba(255,255,255,0.06);
+    border-radius:6px;
+    padding:10px 14px;
+  }
+  .qr-status.confirmed{
+    background:rgba(76,175,80,0.14);
+    color:#8fdd93;
+  }
+  .qr-status .dot{
+    width:8px; height:8px; border-radius:50%;
     background:var(--amber);
-    color:var(--forest-deep);
+    animation:qrPulse 1.4s ease-in-out infinite;
+    flex-shrink:0;
   }
-  .slip-btn:disabled{ background:rgba(255,255,255,0.15); color:rgba(255,255,255,0.4); }
+  .qr-status.confirmed .dot{ background:#4CAF50; animation:none; }
+  @keyframes qrPulse{
+    0%,100%{ opacity:1; transform:scale(1); }
+    50%{ opacity:.4; transform:scale(.7); }
+  }
+  .qr-loading{ color:var(--mist); font-size:13px; padding:20px 0; }
 
   footer{
     text-align:center;
@@ -560,7 +582,7 @@
       <div class="msg error" id="errorMsg"></div>
 
       <button type="submit" class="btn" id="submitBtn">ส่งคำขอจอง</button>
-      <div class="hint" style="text-align:center;margin-top:10px;">การจองจะยังไม่สมบูรณ์จนกว่าเจ้าของบ้านจะติดต่อกลับยืนยัน</div>
+      <div class="hint" style="text-align:center;margin-top:10px;">การจองจะยังไม่สมบูรณ์จนกว่าจะชำระมัดจำผ่าน QR พร้อมเพย์ในขั้นตอนถัดไป</div>
     </form>
 
     <div class="confirm" id="confirmBox">
@@ -571,25 +593,29 @@
       <div class="amt" id="confirmDeposit">–</div>
       <p>จากยอดรวม <span id="confirmTotal" class="mono">–</span> บาท</p>
       <div class="contact">
-        <div id="confirmContactText">เจ้าของบ้านจะติดต่อกลับทางเบอร์ที่ให้ไว้เพื่อยืนยันและแจ้งช่องทางโอนมัดจำ</div>
+        <div id="confirmContactText">สแกน QR ด้านล่างเพื่อชำระมัดจำ ระบบจะยืนยันการจองให้อัตโนมัติทันทีที่ได้รับเงิน</div>
       </div>
 
-      <div class="slip-section">
-        <h3>แนบสลิปโอนเงิน</h3>
-        <p class="slip-hint">โอนมัดจำแล้ว? แนบรูปสลิปตอนนี้เลย เจ้าของบ้านจะตรวจสอบและยืนยันการจองให้เร็วขึ้น (ข้ามขั้นนี้ไปก่อนก็ได้ กลับมาแนบทีหลังผ่านการติดต่อโดยตรง)</p>
+      <div class="qr-section">
+        <h3>สแกนจ่ายมัดจำ</h3>
+        <p class="qr-hint">สแกน QR พร้อมเพย์ด้วยแอปธนาคารหรือ LINE BK เพื่อชำระมัดจำ ระบบจะยืนยันการจองให้อัตโนมัติภายในไม่กี่วินาทีหลังโอนสำเร็จ — <strong>กรุณาโอนตามยอดที่แสดงเป๊ะๆ รวมเศษสตางค์</strong> เพื่อให้ระบบจับคู่ยอดเงินได้ถูกต้อง</p>
 
-        <div id="slipPreviewWrap" style="display:none;">
-          <img id="slipPreview" alt="ตัวอย่างสลิปที่เลือก" />
+        <div id="qrLoading" class="qr-loading">กำลังสร้าง QR สำหรับชำระเงิน...</div>
+
+        <div id="qrContent" style="display:none;">
+          <div class="qr-image-wrap">
+            <img id="qrImage" alt="QR พร้อมเพย์สำหรับชำระมัดจำ" />
+          </div>
+          <div class="qr-amount-label">ยอดที่ต้องโอน (รวมเศษสตางค์)</div>
+          <div class="qr-amount"><span class="baht-sign">฿</span><span id="qrAmount">–</span></div>
+
+          <div class="qr-status" id="qrStatus">
+            <span class="dot"></span>
+            <span id="qrStatusText">กำลังรอตรวจสอบยอดเงินเข้า...</span>
+          </div>
         </div>
 
-        <label class="slip-file-label" id="slipFileLabel" for="slipFile">
-          <span id="slipFileLabelText">เลือกรูปสลิป</span>
-        </label>
-        <input type="file" id="slipFile" accept="image/*" capture="environment" style="display:none;" />
-
-        <button type="button" class="btn slip-btn" id="slipUploadBtn" disabled>อัปโหลดสลิป</button>
-        <div class="msg" id="slipMsg"></div>
-        <div class="msg info" id="slipSuccessMsg" style="display:none;">✓ ส่งสลิปแล้ว เจ้าของบ้านจะตรวจสอบและยืนยันการจองเร็วๆ นี้</div>
+        <div class="msg error" id="qrErrorMsg" style="display:none;"></div>
       </div>
 
       <a class="home-link" href="index.html">← กลับหน้าแรก</a>
@@ -620,9 +646,8 @@
 
 <script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
-  import { getFirestore, collection, query, where, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+  import { getFirestore, collection, query, where, getDocs, doc, getDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
   import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-functions.js";
-  import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-storage.js";
 
   const firebaseConfig = {
     apiKey: "AIzaSyCUTonG9eNHQisuxquXoWr21iNfanKYLuo",
@@ -637,17 +662,16 @@
   const app = initializeApp(firebaseConfig);
   const db = getFirestore(app);
   const functions = getFunctions(app, "asia-southeast1");
-  const storage = getStorage(app);
   const createPublicBooking = httpsCallable(functions, "createPublicBooking");
-  const attachPaymentSlip = httpsCallable(functions, "attachPaymentSlip");
   const checkRoomAvailability = httpsCallable(functions, "checkRoomAvailability");
+  const generatePromptPayQR = httpsCallable(functions, "generatePromptPayQR");
 
   let rooms = [];
   let selectedRoom = null;
   let createdBookingId = null;
-  let selectedSlipFile = null;
   let occupiedRoomNames = new Set();
   let checkingAvailability = false;
+  let paymentUnsubscribe = null;
   const requestedRoomId = new URLSearchParams(window.location.search).get("room");
 
   const money = (n) => new Intl.NumberFormat("th-TH").format(Math.round(n));
@@ -986,6 +1010,9 @@
       document.getElementById("bookingForm").style.display = "none";
       document.getElementById("confirmBox").classList.add("show");
       window.scrollTo({ top: document.getElementById("form-section").offsetTop - 20, behavior: "smooth" });
+
+      loadPromptPayQR();
+      listenForPaymentConfirmation();
     } catch (err) {
       errorBox.textContent = err.message || "ส่งคำขอไม่สำเร็จ กรุณาลองใหม่อีกครั้ง";
       errorBox.style.display = "block";
@@ -995,67 +1022,63 @@
     }
   });
 
-  // ---------------- อัปโหลดสลิปโอนเงิน ----------------
-  const slipFileInput = document.getElementById("slipFile");
-  const slipFileLabelText = document.getElementById("slipFileLabelText");
-  const slipPreviewWrap = document.getElementById("slipPreviewWrap");
-  const slipPreview = document.getElementById("slipPreview");
-  const slipUploadBtn = document.getElementById("slipUploadBtn");
-  const slipMsg = document.getElementById("slipMsg");
-  const slipSuccessMsg = document.getElementById("slipSuccessMsg");
+  // ---------------- QR พร้อมเพย์ + ยืนยันการชำระเงินอัตโนมัติ ----------------
+  const qrLoading = document.getElementById("qrLoading");
+  const qrContent = document.getElementById("qrContent");
+  const qrImage = document.getElementById("qrImage");
+  const qrAmount = document.getElementById("qrAmount");
+  const qrStatus = document.getElementById("qrStatus");
+  const qrStatusText = document.getElementById("qrStatusText");
+  const qrErrorMsg = document.getElementById("qrErrorMsg");
 
-  slipFileInput.addEventListener("change", (e) => {
-    const file = e.target.files[0];
-    slipMsg.style.display = "none";
-    if (!file) {
-      selectedSlipFile = null;
-      slipUploadBtn.disabled = true;
-      slipPreviewWrap.style.display = "none";
-      return;
-    }
-    if (file.size > 5 * 1024 * 1024) {
-      slipMsg.textContent = "ไฟล์ใหญ่เกิน 5MB กรุณาเลือกรูปที่เล็กกว่านี้";
-      slipMsg.style.display = "block";
-      selectedSlipFile = null;
-      slipUploadBtn.disabled = true;
-      return;
-    }
-    selectedSlipFile = file;
-    slipFileLabelText.textContent = file.name;
-    slipUploadBtn.disabled = false;
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      slipPreview.src = ev.target.result;
-      slipPreviewWrap.style.display = "block";
-    };
-    reader.readAsDataURL(file);
-  });
-
-  slipUploadBtn.addEventListener("click", async () => {
-    if (!selectedSlipFile || !createdBookingId) return;
-    slipMsg.style.display = "none";
-    slipUploadBtn.disabled = true;
-    slipUploadBtn.textContent = "กำลังอัปโหลด...";
+  async function loadPromptPayQR() {
+    if (!createdBookingId) return;
+    qrLoading.style.display = "block";
+    qrContent.style.display = "none";
+    qrErrorMsg.style.display = "none";
 
     try {
-      const ext = (selectedSlipFile.name.split(".").pop() || "jpg").toLowerCase();
-      const filePath = `slips/${createdBookingId}/${Date.now()}.${ext}`;
-      const storageRef = ref(storage, filePath);
-      await uploadBytes(storageRef, selectedSlipFile, { contentType: selectedSlipFile.type });
-      const downloadUrl = await getDownloadURL(storageRef);
-
-      await attachPaymentSlip({ bookingId: createdBookingId, slipUrl: downloadUrl });
-
-      document.getElementById("slipFileLabel").style.display = "none";
-      slipUploadBtn.style.display = "none";
-      slipSuccessMsg.style.display = "block";
+      const result = await generatePromptPayQR({ bookingId: createdBookingId });
+      const data = result.data;
+      qrImage.src = data.qrDataUrl;
+      qrAmount.textContent = money(data.amount);
+      qrLoading.style.display = "none";
+      qrContent.style.display = "block";
     } catch (err) {
-      slipMsg.textContent = err.message || "อัปโหลดสลิปไม่สำเร็จ กรุณาลองใหม่อีกครั้ง";
-      slipMsg.style.display = "block";
-      slipUploadBtn.disabled = false;
-      slipUploadBtn.textContent = "อัปโหลดสลิป";
+      qrLoading.style.display = "none";
+      qrErrorMsg.textContent =
+        (err && err.message) ||
+        "สร้าง QR ไม่สำเร็จ กรุณารีเฟรชหน้านี้ หรือติดต่อเจ้าของบ้านโดยตรงเพื่อขอเลขพร้อมเพย์";
+      qrErrorMsg.style.display = "block";
     }
-  });
+  }
+
+  function listenForPaymentConfirmation() {
+    if (!createdBookingId) return;
+    if (paymentUnsubscribe) paymentUnsubscribe();
+
+    paymentUnsubscribe = onSnapshot(
+      doc(db, "bookings", createdBookingId),
+      (snap) => {
+        if (!snap.exists()) return;
+        const b = snap.data();
+        if (b.status === "มัดจำแล้ว") {
+          qrContent.style.display = "block";
+          qrLoading.style.display = "none";
+          qrStatus.classList.add("confirmed");
+          qrStatus.querySelector(".dot")?.remove();
+          qrStatusText.textContent = "✓ ได้รับเงินมัดจำแล้ว การจองของคุณยืนยันสมบูรณ์!";
+          if (paymentUnsubscribe) {
+            paymentUnsubscribe();
+            paymentUnsubscribe = null;
+          }
+        }
+      },
+      (err) => {
+        console.error("payment listener error:", err);
+      }
+    );
+  }
 
   loadSettings();
   loadRooms();
