@@ -468,6 +468,20 @@
     flex-shrink:0;
   }
   .qr-status.confirmed .dot{ background:#4CAF50; animation:none; }
+  .confirmed-booking{
+    display:none;
+    margin-top:14px;
+    padding:16px;
+    border:1px solid rgba(143,221,147,.35);
+    border-radius:6px;
+    background:rgba(255,255,255,.07);
+    text-align:left;
+  }
+  .confirmed-booking.show{ display:block; }
+  .confirmed-booking h3{ color:#8fdd93; font-size:17px; margin-bottom:10px; text-align:center; }
+  .confirmed-row{ display:flex; justify-content:space-between; gap:18px; padding:5px 0; font-size:13.5px; }
+  .confirmed-row span:first-child{ color:var(--mist); }
+  .confirmed-row strong{ color:#fff; text-align:right; font-weight:600; }
   @keyframes qrPulse{
     0%,100%{ opacity:1; transform:scale(1); }
     50%{ opacity:.4; transform:scale(.7); }
@@ -612,6 +626,10 @@
           <div class="qr-status" id="qrStatus">
             <span class="dot"></span>
             <span id="qrStatusText">กำลังรอตรวจสอบยอดเงินเข้า...</span>
+          </div>
+          <div class="confirmed-booking" id="confirmedBooking" aria-live="polite">
+            <h3>รายละเอียดการจองที่ยืนยันแล้ว</h3>
+            <div id="confirmedBookingRows"></div>
           </div>
         </div>
 
@@ -1032,6 +1050,35 @@
   const qrStatus = document.getElementById("qrStatus");
   const qrStatusText = document.getElementById("qrStatusText");
   const qrErrorMsg = document.getElementById("qrErrorMsg");
+  const confirmedBooking = document.getElementById("confirmedBooking");
+  const confirmedBookingRows = document.getElementById("confirmedBookingRows");
+
+  function renderConfirmedBookingDetails(booking) {
+    if (!booking) return;
+    const rows = [];
+    const add = (label, value) => {
+      if (value !== null && value !== undefined && value !== "") rows.push([label, String(value)]);
+    };
+    add("เลขที่การจอง", booking.bookingCode);
+    add("ห้องพัก", booking.roomName);
+    add("วันเช็คอิน", formatThaiDate(booking.checkInDate));
+    add("วันเช็คเอาท์", formatThaiDate(booking.checkOutDate));
+    add("จำนวนคืน", booking.nights != null ? `${booking.nights} คืน` : null);
+    add("ผู้เข้าพัก", booking.guests != null ? `${booking.guests} ท่าน` : null);
+    add("ยอดรวม", booking.total != null ? `฿${money(booking.total)}` : null);
+    add("มัดจำที่ได้รับ", booking.paidDeposit != null ? `฿${moneyExact(booking.paidDeposit)}` : null);
+    confirmedBookingRows.replaceChildren(...rows.map(([label, value]) => {
+      const row = document.createElement("div");
+      row.className = "confirmed-row";
+      const labelEl = document.createElement("span");
+      labelEl.textContent = label;
+      const valueEl = document.createElement("strong");
+      valueEl.textContent = value;
+      row.append(labelEl, valueEl);
+      return row;
+    }));
+    confirmedBooking.classList.toggle("show", rows.length > 0);
+  }
 
   async function loadPromptPayQR() {
     if (!createdBookingId) return;
@@ -1069,6 +1116,7 @@
           qrStatus.classList.add("confirmed");
           qrStatus.querySelector(".dot")?.remove();
           qrStatusText.textContent = "✓ ได้รับเงินมัดจำแล้ว การจองของคุณยืนยันสมบูรณ์!";
+          renderConfirmedBookingDetails(data.booking);
           paymentPollTimer = null;
           return;
         }

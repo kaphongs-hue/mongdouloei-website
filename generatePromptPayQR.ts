@@ -78,6 +78,37 @@ export const getPublicPaymentStatus = onCall(
     const bookingId = bookingIdOf(request.data?.bookingId);
     const snap = await getFirestore().collection("bookings").doc(bookingId).get();
     if (!snap.exists) throw new HttpsError("not-found", "ไม่พบข้อมูลการจองนี้");
-    return { confirmed: snap.get("status") === "มัดจำแล้ว" };
+    const confirmed = snap.get("status") === "มัดจำแล้ว";
+    if (!confirmed) return { confirmed: false };
+
+    const booking = snap.data()!;
+    const dateText = (value: unknown): string | null => {
+      if (typeof value === "string") return value.slice(0, 10);
+      if (value && typeof (value as { toDate?: unknown }).toDate === "function") {
+        return (value as { toDate(): Date }).toDate().toISOString().slice(0, 10);
+      }
+      return null;
+    };
+    const numberOrNull = (value: unknown): number | null => {
+      const number = Number(value);
+      return Number.isFinite(number) ? number : null;
+    };
+
+    // ส่งเฉพาะสรุปที่ลูกค้าต้องใช้ ไม่ส่งชื่อ เบอร์โทร หรือหมายเหตุส่วนตัว
+    return {
+      confirmed: true,
+      booking: {
+        bookingCode: typeof booking.bookingCode === "string" ? booking.bookingCode : null,
+        roomName: typeof booking.roomName === "string" ? booking.roomName :
+          (typeof booking.room === "string" ? booking.room :
+            (typeof booking.room?.name === "string" ? booking.room.name : null)),
+        checkInDate: dateText(booking.checkInDate ?? booking.checkIn),
+        checkOutDate: dateText(booking.checkOutDate ?? booking.checkOut),
+        nights: numberOrNull(booking.nights),
+        guests: numberOrNull(booking.guests ?? booking.guestCount),
+        total: numberOrNull(booking.total ?? booking.totalPrice),
+        paidDeposit: numberOrNull(booking.paidDeposit ?? booking.expectedDeposit),
+      },
+    };
   }
 );
