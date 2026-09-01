@@ -688,6 +688,7 @@
   let rooms = [];
   let selectedRoom = null;
   let createdBookingId = null;
+  let createdBookingSummary = null;
   let occupiedRoomNames = new Set();
   let checkingAvailability = false;
   let paymentPollTimer = null;
@@ -1022,6 +1023,19 @@
 
       const data = result.data;
       createdBookingId = data.bookingId;
+      createdBookingSummary = {
+        bookingCode: data.bookingCode,
+        roomName: selectedRoom?.name,
+        checkInDate: document.getElementById("checkIn").value,
+        checkOutDate: document.getElementById("checkOut").value,
+        nights: nightsBetween(
+          document.getElementById("checkIn").value,
+          document.getElementById("checkOut").value,
+        ),
+        guests: parseInt(document.getElementById("guests").value, 10),
+        total: data.total,
+        paidDeposit: data.expectedDeposit,
+      };
       document.getElementById("confirmCode").textContent = data.bookingCode;
       document.getElementById("confirmDeposit").textContent = `฿${money(data.expectedDeposit)}`;
       document.getElementById("confirmTotal").textContent = money(data.total);
@@ -1116,7 +1130,16 @@
           qrStatus.classList.add("confirmed");
           qrStatus.querySelector(".dot")?.remove();
           qrStatusText.textContent = "✓ ได้รับเงินมัดจำแล้ว การจองของคุณยืนยันสมบูรณ์!";
-          renderConfirmedBookingDetails(data.booking);
+          // ใช้ข้อมูลจากเซิร์ฟเวอร์เป็นหลัก และข้อมูลที่เพิ่งกรอกเป็น fallback
+          // เพื่อให้รายละเอียดแสดงได้แม้รายการเก่าใช้ชื่อฟิลด์คนละแบบ
+          const serverBooking = Object.fromEntries(
+            Object.entries(data.booking || {}).filter(([, value]) =>
+              value !== null && value !== undefined && value !== ""),
+          );
+          renderConfirmedBookingDetails({
+            ...createdBookingSummary,
+            ...serverBooking,
+          });
           paymentPollTimer = null;
           return;
         }
