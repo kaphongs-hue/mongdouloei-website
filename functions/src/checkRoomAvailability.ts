@@ -1,6 +1,7 @@
 import {onCall, HttpsError} from "firebase-functions/v2/https";
 import {getFirestore} from "firebase-admin/firestore";
 import {getApps, initializeApp} from "firebase-admin/app";
+import {loadPromotions} from "./promotionPricing";
 
 if (getApps().length === 0) initializeApp();
 const db = getFirestore();
@@ -23,9 +24,10 @@ export const checkRoomAvailability = onCall(
       throw new HttpsError("invalid-argument", "กรุณาระบุวันเช็คอินและเช็คเอาท์ให้ถูกต้อง");
     }
 
-    const [bookingSnap, roomSnap] = await Promise.all([
+    const [bookingSnap, roomSnap, promotions] = await Promise.all([
       db.collection("bookings").where("status", "!=", CANCELLED).get(),
       db.collection("rooms").where("active", "==", true).get(),
+      loadPromotions(),
     ]);
     const rooms = new Map(roomSnap.docs.map((doc) => {
       const room = doc.data();
@@ -54,6 +56,19 @@ export const checkRoomAvailability = onCall(
     reservedGuests.forEach((count, roomName) => {
       if (count >= (rooms.get(roomName)?.capacity ?? 1)) occupied.add(roomName);
     });
-    return {occupiedRoomNames: Array.from(occupied)};
+    return {
+      occupiedRoomNames: Array.from(occupied),
+      promotions: promotions.map((promo) => ({
+        id: promo.id,
+        name: promo.name,
+        startDate: promo.startDate,
+        endDate: promo.endDate,
+        weekdays: promo.weekdays,
+        price: promo.price,
+        appliesToAllRooms: promo.appliesToAllRooms,
+        roomIds: promo.roomIds,
+        appliesToPricingModes: promo.appliesToPricingModes,
+      })),
+    };
   }
 );

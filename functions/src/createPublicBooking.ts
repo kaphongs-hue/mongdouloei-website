@@ -1,6 +1,7 @@
 import {onCall, HttpsError} from "firebase-functions/v2/https";
 import {getFirestore, FieldValue} from "firebase-admin/firestore";
 import {getApps, initializeApp} from "firebase-admin/app";
+import {loadPromotions, quoteStay} from "./promotionPricing";
 
 if (getApps().length === 0) initializeApp();
 const db = getFirestore();
@@ -103,7 +104,9 @@ export const createPublicBooking = onCall(
       throw new HttpsError("invalid-argument", "จำนวนผู้เข้าพักมากเกินไปสำหรับห้องนี้");
     }
 
-    const roomTotal = roomPrice * nights * (pricingMode === "per_guest" ? data.guests : 1);
+    const promotions = await loadPromotions();
+    const quote = quoteStay(promotions, data.roomId, roomPrice, pricingMode, data.checkInDate, data.checkOutDate, data.guests);
+    const roomTotal = quote.roomTotal;
     const extraGuests = pricingMode === "per_room" ? Math.max(0, data.guests - roomCapacity) : 0;
     const extraGuestRate = 0;
     const extraGuestTotal = room.chargesExtraGuestFee === false ? 0 : extraGuests * extraGuestRate * nights;
@@ -140,6 +143,8 @@ export const createPublicBooking = onCall(
         roomCapacity,
         roomEmoji,
         pricingMode,
+        regularRoomPrice: roomPrice,
+        appliedPromotions: quote.promotionNames,
         guestName: data.guestName.trim(),
         phone: data.phone.trim(),
         guests: data.guests,
