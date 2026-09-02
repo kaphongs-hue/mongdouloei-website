@@ -4,3 +4,4 @@ initializeApp();
 
 export { generatePromptPayQR, getPublicPaymentStatus } from "./generatePromptPayQR";
 export { paynoiWebhook } from "./paynoiWebhook";
+export { createPublicBooking } from "./createPublicBooking";

@@ -868,7 +868,7 @@
           ${galleryBtn}
           <div class="name">${safeName}</div>
           <div class="meta">พักได้ ${capacity} ท่าน</div>
-          <div class="price">฿${money(r.price || 0)} <small>/ คืน</small></div>
+          <div class="price">฿${money(r.price || 0)} <small>${r.pricingMode === "per_guest" ? "/ คน / คืน" : "/ คืน"}</small></div>
         </div>
       `;
     }).join("");
@@ -986,7 +986,8 @@
     const nights = nightsBetween(ci, co);
     if (nights < 1) { box.style.display = "none"; return; }
 
-    const roomTotal = (selectedRoom.price || 0) * nights;
+    const guests = Math.max(1, parseInt(document.getElementById("guests").value, 10) || 1);
+    const roomTotal = (selectedRoom.price || 0) * nights * (selectedRoom.pricingMode === "per_guest" ? guests : 1);
     const total = roomTotal; // ค่าเสริมท่านคำนวณฝั่งแอดมินตอนยืนยันอีกที
     const deposit = Math.round(total * 0.5);
 
@@ -1173,6 +1174,7 @@
     link.href = canvas.toDataURL("image/png");
     link.click();
   });
+  document.getElementById("guests").addEventListener("input", updateSummary);
 
   async function loadPromptPayQR() {
     if (!createdBookingId) return;
