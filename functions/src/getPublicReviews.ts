@@ -5,6 +5,8 @@ import {getFirestore, Timestamp} from "firebase-admin/firestore";
 const db = getFirestore();
 const googlePlacesApiKey = defineSecret("GOOGLE_PLACES_API_KEY");
 const BUSINESS_QUERY = "มองดูเลยโฮมสเตย์ ไฮตาก ภูเรือ เลย";
+const CACHE_DOCUMENT = db.collection("internalCache").doc("googleReviews");
+const CACHE_MAX_AGE_MS = 6 * 60 * 60 * 1000;
 
 interface PublicReview {
   id: string;
@@ -118,16 +120,38 @@ async function loadApprovedReviews(): Promise<PublicReview[]> {
     .map(({sortOrder: _sortOrder, ...review}) => review);
 }
 
+async function readCachedGoogleReviews(allowStale = false): Promise<{
+  reviews: PublicReview[];
+  rating?: number;
+  reviewCount?: number;
+  sourceUrl?: string;
+} | null> {
+  const snapshot = await CACHE_DOCUMENT.get();
+  if (!snapshot.exists) return null;
+  const cache = snapshot.data();
+  const cachedAt = cache?.cachedAt instanceof Timestamp ? cache.cachedAt.toMillis() : 0;
+  if (!allowStale && Date.now() - cachedAt > CACHE_MAX_AGE_MS) return null;
+  const payload = cache?.payload;
+  return payload && Array.isArray(payload.reviews) ? payload : null;
+}
+
 export const getPublicReviews = onCall(
   {region: "asia-southeast1", maxInstances: 10, secrets: [googlePlacesApiKey]},
   async () => {
+    const cached = await readCachedGoogleReviews();
+    if (cached) return cached;
     const apiKey = googlePlacesApiKey.value();
     if (apiKey) {
       try {
         const google = await loadGoogleReviews(apiKey);
-        if (google.reviews.length) return google;
+        if (google.reviews.length) {
+          await CACHE_DOCUMENT.set({payload: google, cachedAt: Timestamp.now()});
+          return google;
+        }
       } catch (error) {
         console.warn("Google reviews unavailable; using approved reviews.", error);
+        const staleCache = await readCachedGoogleReviews(true);
+        if (staleCache) return staleCache;
       }
     }
     return {reviews: await loadApprovedReviews()};

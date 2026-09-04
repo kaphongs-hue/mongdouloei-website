@@ -402,13 +402,13 @@
 #mdlpromo-modal .mdlpromo-close:hover{background:rgba(255,255,255,.3)}
 </style>
 
-<div id="mdlpromo-overlay">
-  <div id="mdlpromo-modal">
+<div id="mdlpromo-overlay" aria-hidden="true">
+  <div id="mdlpromo-modal" role="dialog" aria-modal="true" aria-labelledby="mdlpromo-title">
     <button class="mdlpromo-close" onclick="mdlpromoHide()" aria-label="ปิด">✕</button>
     <div class="mdlpromo-header">
       <span class="mdlpromo-icon">🏔️</span>
       <span class="mdlpromo-badge">✨ โปรโมชั่นเดือนกันยายน ✨</span>
-      <h2>พักผ่อนท่ามกลางขุนเขา<span class="mdlpromo-accent">ราคาพิเศษ</span></h2>
+      <h2 id="mdlpromo-title">พักผ่อนท่ามกลางขุนเขา<span class="mdlpromo-accent">ราคาพิเศษ</span></h2>
       <p>จองผ่านเว็บไซต์วันนี้ <span class="mdlpromo-glow">รับสิทธิ์พิเศษทันที</span></p>
     </div>
     <div class="mdlpromo-body">
@@ -430,6 +430,11 @@
 <script>
 (function(){
   var promoEndDate = new Date("2026-09-30T23:59:59+07:00");
+  var overlay = document.getElementById('mdlpromo-overlay');
+  var storageKey = 'mdlpromo-last-shown';
+  var today = new Intl.DateTimeFormat('en-CA', {timeZone:'Asia/Bangkok'}).format(new Date());
+  var shown = false;
+  try { shown = localStorage.getItem(storageKey) === today; } catch(e) {}
   function update(){
     var diff = promoEndDate - new Date();
     if(diff <= 0){ hide(); return; }
@@ -439,11 +444,24 @@
     document.getElementById('mdlpromo-mins').textContent = String(m).padStart(2,'0');
     document.getElementById('mdlpromo-secs').textContent = String(s).padStart(2,'0');
   }
-  window.mdlpromoHide = function(){ document.getElementById('mdlpromo-overlay').classList.remove('show'); };
-  function show(){ document.getElementById('mdlpromo-overlay').classList.add('show'); update(); }
+  window.mdlpromoHide = function(){ overlay.classList.remove('show'); overlay.setAttribute('aria-hidden','true'); };
+  function show(){
+    if(shown || new Date() >= promoEndDate) return;
+    shown = true;
+    try { localStorage.setItem(storageKey, today); } catch(e) {}
+    window.removeEventListener('scroll', onScroll);
+    overlay.classList.add('show');
+    overlay.setAttribute('aria-hidden','false');
+    update();
+  }
   function hide(){ window.mdlpromoHide(); }
-  document.getElementById('mdlpromo-overlay').addEventListener('click', function(e){ if(e.target.id === 'mdlpromo-overlay') hide(); });
-  setTimeout(show, 1500);
+  function onScroll(){
+    var max = document.documentElement.scrollHeight - innerHeight;
+    if(max > 0 && scrollY / max >= .2) show();
+  }
+  overlay.addEventListener('click', function(e){ if(e.target.id === 'mdlpromo-overlay') hide(); });
+  document.addEventListener('keydown', function(e){ if(e.key === 'Escape') hide(); });
+  if(!shown){ window.addEventListener('scroll', onScroll, {passive:true}); setTimeout(show, 8000); }
   setInterval(update, 1000);
 })();
 </script>
