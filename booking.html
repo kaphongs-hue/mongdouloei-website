@@ -429,6 +429,14 @@
   }
   .qr-section h3{ color:#fff; font-size:16px; margin-bottom:6px; }
   .qr-section .qr-hint{ color:var(--mist); font-size:13px; margin-bottom:16px; }
+  .qr-countdown{
+    font-family:'JetBrains Mono',monospace;
+    font-size:13.5px;
+    color:var(--amber);
+    margin-top:10px;
+    font-weight:600;
+  }
+  .qr-countdown.urgent{ color:#e8a06b; }
   .qr-image-wrap{
     background:#fff;
     border-radius:10px;
@@ -632,7 +640,7 @@
       <div class="amt" id="confirmDeposit">–</div>
       <p>จากยอดรวม <span id="confirmTotal" class="mono">–</span> บาท</p>
       <div class="contact">
-        <div id="confirmContactText">สแกน QR ด้านล่างเพื่อชำระมัดจำ ระบบจะยืนยันการจองให้อัตโนมัติทันทีที่ได้รับเงิน</div>
+        <div id="confirmContactText">เรากันห้องนี้ไว้ให้ชั่วคราว — สแกน QR ด้านล่างและชำระมัดจำ<strong>ภายใน 3 นาที</strong> ระบบจะยืนยันการจองให้อัตโนมัติทันทีที่ได้รับเงิน ถ้าเกินเวลาโดยไม่มีเงินเข้า ห้องจะถูกปล่อยคืนและต้องทำรายการจองใหม่</div>
       </div>
 
       <div class="qr-section">
@@ -652,6 +660,7 @@
             <span class="dot"></span>
             <span id="qrStatusText">กำลังรอตรวจสอบยอดเงินเข้า...</span>
           </div>
+          <div class="qr-countdown" id="qrCountdown"></div>
           <div class="confirmed-booking" id="confirmedBooking" aria-live="polite">
             <h3>รายละเอียดการจองที่ยืนยันแล้ว</h3>
             <div id="confirmedBookingRows"></div>
@@ -722,6 +731,8 @@
   let checkingAvailability = false;
   let activePromotions = [];
   let paymentPollTimer = null;
+  let reservationCountdownTimer = null;
+  let reservationExpiredHandled = false;
   const requestedRoomId = new URLSearchParams(window.location.search).get("room");
 
   const nextDateStr = (dateStr) => {
@@ -1136,6 +1147,9 @@
 
       loadPromptPayQR();
       listenForPaymentConfirmation();
+      // นับถอยหลัง 3 นาที (ค่าจริงมาจากเซิร์ฟเวอร์ ไม่ใช่กะเวลาเอง) ก่อนที่
+      // ห้องจะถูกปล่อยคืนถ้ายังไม่มีเงินเข้า
+      startReservationCountdown(Number(data.expiresInSeconds) || 180);
     } catch (err) {
       errorBox.textContent = err.message || "ส่งคำขอไม่สำเร็จ กรุณาลองใหม่อีกครั้ง";
       errorBox.style.display = "block";
@@ -1274,6 +1288,8 @@
           qrStatus.classList.add("confirmed");
           qrStatus.querySelector(".dot")?.remove();
           qrStatusText.textContent = "✓ ได้รับเงินมัดจำแล้ว การจองของคุณยืนยันสมบูรณ์!";
+          document.getElementById("qrCountdown").textContent = "";
+          if (reservationCountdownTimer) { clearInterval(reservationCountdownTimer); reservationCountdownTimer = null; }
           // ใช้ข้อมูลจากเซิร์ฟเวอร์เป็นหลัก และข้อมูลที่เพิ่มกรอกเป็น fallback
           // เพื่อให้รายละเอียดแสดงได้แม้รายการเก่าใช้ชื่อฟิลด์คนละแบบ
           const serverBooking = Object.fromEntries(
@@ -1287,6 +1303,13 @@
           paymentPollTimer = null;
           return;
         }
+        // เซิร์ฟเวอร์เป็นผู้ตัดสินว่าหมดเวลารอชำระเงินหรือยัง (แม่นยำกว่านับ
+        // เวลาที่เครื่องลูกค้าเอง เผื่อเปิดแท็บค้างไว้/นาฬิกาเครื่องเพี้ยน)
+        if (data.expired) {
+          paymentPollTimer = null;
+          handleReservationExpired();
+          return;
+        }
       } catch (err) {
         failures += 1;
         console.error("payment listener error:", err);
@@ -1296,8 +1319,48 @@
     poll();
   }
 
+  // นับถอยหลังเวลาที่กันห้องไว้รอชำระเงิน (ค่าเริ่มต้นมาจากเซิร์ฟเวอร์ตอน
+  // สร้างรายการรอชำระเงิน) แสดงเป็น mm:ss ให้ลูกค้าเห็นว่าเหลือเวลาเท่าไร
+  function startReservationCountdown(totalSeconds) {
+    if (reservationCountdownTimer) clearInterval(reservationCountdownTimer);
+    reservationExpiredHandled = false;
+    const countdownEl = document.getElementById("qrCountdown");
+    const deadline = Date.now() + totalSeconds * 1000;
+    const render = () => {
+      const remaining = Math.max(0, Math.round((deadline - Date.now()) / 1000));
+      const mm = String(Math.floor(remaining / 60)).padStart(2, "0");
+      const ss = String(remaining % 60).padStart(2, "0");
+      countdownEl.textContent = `เหลือเวลาชำระเงินอีก ${mm}:${ss} นาที`;
+      countdownEl.classList.toggle("urgent", remaining <= 30);
+      if (remaining <= 0) {
+        clearInterval(reservationCountdownTimer);
+        reservationCountdownTimer = null;
+        handleReservationExpired();
+      }
+    };
+    render();
+    reservationCountdownTimer = setInterval(render, 1000);
+  }
+
+  // หมดเวลารอชำระเงิน: หยุด poll/นับถอยหลัง แจ้งลูกค้า แล้วพากลับไปเริ่ม
+  // จองใหม่ (รีโหลดหน้า ทำให้ปฏิทิน/สถานะห้องดึงข้อมูลใหม่ทั้งหมด ห้องที่
+  // เพิ่มปล่อยคืนจะโผล่เป็นว่างให้เลือกได้ทันที)
+  function handleReservationExpired() {
+    if (reservationExpiredHandled) return;
+    reservationExpiredHandled = true;
+    if (paymentPollTimer) { clearTimeout(paymentPollTimer); paymentPollTimer = null; }
+    if (reservationCountdownTimer) { clearInterval(reservationCountdownTimer); reservationCountdownTimer = null; }
+    qrStatus.classList.remove("confirmed");
+    qrStatusText.textContent = "หมดเวลาชำระเงิน ห้องที่กันไว้ถูกปล่อยคืนแล้ว";
+    document.getElementById("qrCountdown").textContent = "";
+    qrErrorMsg.textContent = "หมดเวลาชำระเงิน 3 นาที กรุณาทำรายการจองใหม่อีกครั้ง กำลังพากลับไปหน้าจอง...";
+    qrErrorMsg.style.display = "block";
+    setTimeout(() => window.location.reload(), 3000);
+  }
+
   window.addEventListener("beforeunload", () => {
     if (paymentPollTimer) clearTimeout(paymentPollTimer);
+    if (reservationCountdownTimer) clearInterval(reservationCountdownTimer);
   });
 
   loadSettings();
