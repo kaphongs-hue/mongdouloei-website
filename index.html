@@ -103,7 +103,7 @@
 
     .info-grid{display:grid;grid-template-columns:1.05fr .95fr;gap:28px;align-items:stretch}.info-card{padding:38px;border:1px solid var(--line);border-radius:var(--radius);background:var(--white);box-shadow:0 14px 42px rgba(11,24,16,.06)}.times{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:26px}.time{padding:20px;background:var(--cream);border-radius:16px}.time span{display:block;color:var(--muted);font-size:.8rem}.time strong{font-size:1.2rem;color:var(--forest-900)}
     .map-card{display:flex;flex-direction:column;justify-content:flex-end;min-height:350px;padding:38px;border-radius:var(--radius);color:#fff;background:linear-gradient(180deg,rgba(15,28,20,.08),rgba(15,28,20,.88)),var(--hero-image) center/cover,var(--forest-800);box-shadow:0 18px 48px rgba(11,24,16,.14)}.map-card h3{color:#fff;font-size:1.85rem}.map-card p{color:#f2eee5;margin:8px 0 20px}
-    .review-note{padding:14px 18px;background:var(--gold-100);border-left:4px solid var(--gold);border-radius:8px;margin:0 0 24px}.review-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}.review-placeholder{border:2px dashed var(--line);border-radius:var(--radius);padding:26px;color:var(--muted);background:rgba(255,253,248,.5)}.review-placeholder .stars{color:var(--gold-700);letter-spacing:.12em}.review-placeholder strong{display:block;color:var(--forest-900);margin-top:12px}
+    .review-summary{display:flex;align-items:center;justify-content:space-between;gap:24px;padding:22px 26px;margin-bottom:24px;border:1px solid var(--line);border-radius:18px;background:var(--white)}.review-summary[hidden]{display:none}.review-score{display:flex;align-items:baseline;gap:10px}.review-score strong{font:700 2.15rem 'Trirong',serif;color:var(--forest-900)}.review-score span,.review-source{color:var(--muted);font-size:.9rem}.review-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}.review-card{display:flex;flex-direction:column;min-height:245px;padding:26px;border:1px solid rgba(221,210,189,.9);border-radius:var(--radius);background:var(--white);box-shadow:0 12px 36px rgba(11,24,16,.06)}.review-stars{color:var(--gold-700);letter-spacing:.12em;font-size:1.05rem}.review-text{margin:16px 0 22px;color:var(--ink);line-height:1.8}.review-meta{display:flex;align-items:flex-end;justify-content:space-between;gap:14px;margin-top:auto}.review-author strong{display:block;color:var(--forest-900)}.review-author span{color:var(--muted);font-size:.78rem}.review-link{color:var(--gold-700);font-size:.82rem;font-weight:600}.review-empty{grid-column:1/-1;padding:28px;border:1px dashed var(--line);border-radius:var(--radius);text-align:center;color:var(--muted);background:rgba(255,253,249,.55)}.review-empty a{color:var(--gold-700);font-weight:600}
     .faq{max-width:860px}.faq details{border-bottom:1px solid var(--line);padding:0}.faq summary{cursor:pointer;list-style:none;padding:21px 42px 21px 0;font-weight:600;color:var(--forest-900);position:relative}.faq summary::-webkit-details-marker{display:none}.faq summary::after{content:'+';position:absolute;right:8px;font-size:1.35rem}.faq details[open] summary::after{content:'−'}.faq p{color:var(--muted);margin:0;padding:0 42px 22px 0}
     .contact{background:var(--forest-900);color:#fff}.contact h2{color:#fff}.contact .eyebrow{color:var(--gold-100)}.contact-box{display:grid;grid-template-columns:1fr auto;gap:34px;align-items:center}.contact-address{color:#dfe5de}.contact-actions{display:flex;flex-wrap:wrap;justify-content:flex-end;gap:10px}
     footer{padding:30px 0 100px;border-top:1px solid var(--line);color:var(--muted);font-size:.85rem}.foot{display:flex;justify-content:space-between;gap:20px}.foot a{color:var(--forest-800)}
@@ -125,7 +125,7 @@
       <a class="brand" href="#top" aria-label="มองดูเลย หน้าแรก">มองดู<span>เลย</span></a>
       <button class="menu-btn" id="menuButton" aria-expanded="false" aria-controls="navLinks" aria-label="เปิดเมนู">☰</button>
       <div class="nav-links" id="navLinks">
-        <a href="#rooms">บ้านพัก</a><a href="#experience">บรรยากาศ</a><a href="#location">การเดินทาง</a><a href="#faq">คำถามที่พบบ่อย</a><a href="#contact">ติดต่อ</a>
+        <a href="#rooms">บ้านพัก</a><a href="#experience">บรรยากาศ</a><a href="#reviews">รีวิว</a><a href="#location">การเดินทาง</a><a href="#faq">คำถามที่พบบ่อย</a><a href="#contact">ติดต่อ</a>
         <a class="btn primary" href="booking.html">เช็กวันว่าง</a>
       </div>
     </div>
@@ -232,7 +232,16 @@
       <noscript><p>เปิด JavaScript เพื่อดูรูปห้องพัก ราคา และวันว่างล่าสุด หรือโทร <a href="tel:+66813689478">081-368-9478</a> เพื่อสอบถามและจองกับที่พักโดยตรง</p></noscript>
     </div></section>
 
-    <section class="section" id="location"><div class="wrap info-grid">
+    <section class="section" id="reviews"><div class="wrap">
+      <div class="section-head reveal"><div class="eyebrow">เสียงจากผู้เข้าพัก</div><h2>ประสบการณ์จริงจากลูกค้า</h2><p>รีวิวที่เผยแพร่ผ่านระบบของที่พัก พร้อมลิงก์กลับไปยังแหล่งที่มาเมื่อมีข้อมูล</p></div>
+      <div class="review-summary reveal" id="reviewSummary" hidden>
+        <div class="review-score"><strong id="reviewAverage">—</strong><span>จาก 5 คะแนน</span></div>
+        <div class="review-source" id="reviewCount"></div>
+      </div>
+      <div class="review-grid" id="reviewsGrid" aria-live="polite" aria-busy="true"><div class="review-empty">กำลังโหลดรีวิวจากลูกค้า…</div></div>
+    </div></section>
+
+    <section class="section alt" id="location"><div class="wrap info-grid">
       <div class="info-card reveal"><div class="eyebrow">วางแผนเข้าพัก</div><h2>มาเที่ยวได้อย่างสบายใจ</h2><p>เวลามาตรฐานจะแสดงจากระบบของที่พัก หากต้องการเข้าก่อนหรือออกหลังเวลา กรุณาสอบถามล่วงหน้า</p><div class="times"><div class="time"><span>เช็กอิน</span><strong id="checkInTime">14:00 น.</strong></div><div class="time"><span>เช็กเอาต์</span><strong id="checkOutTime">11:00 น.</strong></div></div></div>
       <div class="map-card reveal"><h3>บ้านไฮตาก อำเภอภูเรือ</h3><p id="addressText">110 หมู่ 2 บ้านไฮตาก ต.ลาดค่าง อ.ภูเรือ จ.เลย 42160</p><a class="btn primary" id="mapLink" href="https://www.google.com/maps/search/?api=1&amp;query=%E0%B8%A1%E0%B8%AD%E0%B8%87%E0%B8%94%E0%B8%B9%E0%B9%80%E0%B8%A5%E0%B8%A2%20%E0%B9%82%E0%B8%AE%E0%B8%A1%E0%B8%AA%E0%B9%80%E0%B8%95%E0%B8%A2%E0%B9%8C%20%E0%B9%84%E0%B8%AE%E0%B8%95%E0%B8%B2%E0%B8%81" target="_blank" rel="noopener noreferrer">📍 เปิดหมุดใน Google Maps</a></div>
     </div></section>
@@ -257,6 +266,7 @@
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
     import { getFirestore, collection, doc, getDoc, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
+    import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-functions.js";
 
     // Firebase web config มองเห็นใน browser ได้ตามปกติ แต่ต้องตั้ง Firestore Security Rules ให้ public อ่านได้เฉพาะข้อมูลที่จำเป็นและห้าม public เขียน
     const firebaseConfig = {
@@ -272,7 +282,7 @@
     const FALLBACK_IMAGE = "room-placeholder.svg";
     const FALLBACK_MAP_URL = "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent("มองดูเลย โฮมสเตย์ ไฮตาก");
     const AMENITY_LABELS = {air_conditioner:"แอร์",hot_water:"น้ำอุ่น",wifi:"Wi‑Fi",breakfast:"อาหารเช้า",parking:"ที่จอดรถ",kettle:"กาต้มน้ำ",mountain_view:"วิวภูเขา",private_bathroom:"ห้องน้ำส่วนตัว"};
-    const els = {grid:document.querySelector('#roomsGrid'),count:document.querySelector('#activeRoomCount'),mobilePrice:document.querySelector('#mobilePrice')};
+    const els = {grid:document.querySelector('#roomsGrid'),count:document.querySelector('#activeRoomCount'),mobilePrice:document.querySelector('#mobilePrice'),reviews:document.querySelector('#reviewsGrid'),reviewSummary:document.querySelector('#reviewSummary'),reviewAverage:document.querySelector('#reviewAverage'),reviewCount:document.querySelector('#reviewCount')};
     let galleryImages=[];let galleryIndex=0;let lastFocus=null;
 
     const cleanUrl = (value, fallback='') => {
@@ -310,10 +320,28 @@
 
     function renderRooms(rooms){els.grid.replaceChildren();rooms.forEach(room=>els.grid.append(renderRoom(room)));els.grid.setAttribute('aria-busy','false');els.count.textContent=String(rooms.length);const prices=rooms.map(r=>Number(r.price)).filter(n=>Number.isFinite(n)&&n>0);if(prices.length)els.mobilePrice.textContent=`${money(Math.min(...prices))} / คืน`;observeReveals()}
 
+    const reviewDate = value => {
+      const date=value?.toDate?.()||new Date(value||'');
+      return Number.isNaN(date.getTime())?'':new Intl.DateTimeFormat('th-TH',{year:'numeric',month:'short'}).format(date);
+    };
+    function renderReview(review){
+      const card=make('article','review-card reveal');const rating=Math.min(5,Math.max(1,Math.round(Number(review.rating)||5)));const stars=make('div','review-stars','★'.repeat(rating)+'☆'.repeat(5-rating));stars.setAttribute('aria-label',`${rating} จาก 5 ดาว`);const quote=make('p','review-text',`“${String(review.text||review.comment).trim()}”`);const meta=make('div','review-meta');const author=make('div','review-author');author.append(make('strong','',review.customerName||review.authorName||'ผู้เข้าพัก'));
+      const details=[review.source||'รีวิวจากลูกค้า',reviewDate(review.reviewDate||review.date)].filter(Boolean).join(' · ');author.append(make('span','',details));meta.append(author);const sourceUrl=cleanUrl(review.sourceUrl||review.url);if(sourceUrl){const link=make('a','review-link','ดูต้นฉบับ ↗');link.href=sourceUrl;link.target='_blank';link.rel='noopener noreferrer';meta.append(link)}card.append(stars,quote,meta);return card;
+    }
+    function renderReviews(reviews,summary={}){
+      els.reviews.replaceChildren();
+      if(!reviews.length){const empty=make('div','review-empty','ยังไม่มีรีวิวที่อนุมัติให้เผยแพร่');empty.append(document.createElement('br'));const facebook=make('a','','ติดตามรีวิวและข้อมูลล่าสุดที่ Facebook ของที่พัก ↗');facebook.href='https://www.facebook.com/Hitakland/';facebook.target='_blank';facebook.rel='noopener noreferrer';empty.append(facebook);els.reviews.append(empty);els.reviews.setAttribute('aria-busy','false');return}
+      reviews.forEach(review=>els.reviews.append(renderReview(review)));const ratings=reviews.map(review=>Number(review.rating)).filter(rating=>rating>=1&&rating<=5);const average=Number(summary.rating);const total=Number(summary.reviewCount);if(ratings.length){els.reviewAverage.textContent=Number.isFinite(average)?average.toFixed(1):(ratings.reduce((sum,rating)=>sum+rating,0)/ratings.length).toFixed(1);els.reviewCount.textContent=Number.isFinite(total)&&total>0?`จาก Google ${new Intl.NumberFormat('th-TH').format(total)} รีวิว`:`จากรีวิวที่แสดง ${ratings.length} รายการ`;els.reviewSummary.hidden=false}els.reviews.setAttribute('aria-busy','false');observeReveals();
+    }
+    async function loadReviews(app){
+      try{const getPublicReviews=httpsCallable(getFunctions(app,'asia-southeast1'),'getPublicReviews');const result=await getPublicReviews();renderReviews(Array.isArray(result.data?.reviews)?result.data.reviews:[],result.data||{})}catch(error){console.warn('Unable to load public reviews:',error);renderReviews([])}
+    }
+
     async function loadData(){
       if(Object.values(firebaseConfig).some(v=>String(v).startsWith('REPLACE_'))){renderState('ยังไม่ได้เชื่อม Firebase','กรุณาใส่ apiKey, messagingSenderId และ appId ตามคอมเมนต์ในไฟล์ แล้วห้องพักจริงจะแสดงอัตโนมัติ');els.count.textContent='—';return}
       try{
         const app=initializeApp(firebaseConfig);const db=getFirestore(app);
+        loadReviews(app);
         const [roomSnap,settingsSnap]=await Promise.all([getDocs(query(collection(db,'rooms'),where('active','==',true))),getDoc(doc(db,'settings','app'))]);
         const sortValue=value=>Number.isFinite(Number(value))?Number(value):999;
         const rooms=roomSnap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>sortValue(a.sortOrder)-sortValue(b.sortOrder)||String(a.name||'').localeCompare(String(b.name||''),'th'));

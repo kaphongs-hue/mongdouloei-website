@@ -6,3 +6,4 @@ export { generatePromptPayQR, getPublicPaymentStatus } from "./generatePromptPay
 export { paynoiWebhook } from "./paynoiWebhook";
 export { createPublicBooking } from "./createPublicBooking";
 export { checkRoomAvailability } from "./checkRoomAvailability";
+export { getPublicReviews } from "./getPublicReviews";
