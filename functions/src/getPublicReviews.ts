@@ -5,7 +5,7 @@ import {getFirestore, Timestamp} from "firebase-admin/firestore";
 const db = getFirestore();
 const googlePlacesApiKey = defineSecret("GOOGLE_PLACES_API_KEY");
 const BUSINESS_QUERY = "มองดูเลยโฮมสเตย์ ไฮตาก ภูเรือ เลย";
-const CACHE_DOCUMENT = db.collection("internalCache").doc("googleReviews");
+const CACHE_DOCUMENT = db.collection("internalCache").doc("googleReviewsV2");
 const CACHE_MAX_AGE_MS = 6 * 60 * 60 * 1000;
 
 interface PublicReview {
@@ -16,6 +16,8 @@ interface PublicReview {
   source: string;
   sourceUrl: string;
   reviewDate: string;
+  authorPhotoUrl?: string;
+  authorUrl?: string;
 }
 
 function cleanText(value: unknown, maxLength: number): string {
@@ -78,7 +80,7 @@ async function loadGoogleReviews(apiKey: string): Promise<{
       rating?: number;
       text?: {text?: string};
       publishTime?: string;
-      authorAttribution?: {displayName?: string};
+      authorAttribution?: {displayName?: string; photoUri?: string; uri?: string};
       googleMapsUri?: string;
     }>;
   };
@@ -91,6 +93,8 @@ async function loadGoogleReviews(apiKey: string): Promise<{
     source: "Google",
     sourceUrl: cleanUrl(review.googleMapsUri) || placeUrl,
     reviewDate: isoDate(review.publishTime),
+    authorPhotoUrl: cleanUrl(review.authorAttribution?.photoUri),
+    authorUrl: cleanUrl(review.authorAttribution?.uri),
   })).filter((review) => review.text).slice(0, 6);
   return {
     reviews,
@@ -112,6 +116,8 @@ async function loadApprovedReviews(): Promise<PublicReview[]> {
       source: cleanText(review.source, 80) || "รีวิวจากลูกค้า",
       sourceUrl: cleanUrl(review.sourceUrl ?? review.url),
       reviewDate: isoDate(review.reviewDate ?? review.date),
+      authorPhotoUrl: cleanUrl(review.authorPhotoUrl),
+      authorUrl: cleanUrl(review.authorUrl),
       sortOrder: Number.isFinite(Number(review.sortOrder)) ? Number(review.sortOrder) : 999,
     };
   }).filter((review) => review.text)
