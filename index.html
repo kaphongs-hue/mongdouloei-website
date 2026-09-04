@@ -15,12 +15,12 @@
   <meta property="og:title" content="มองดูเลยโฮมสเตย์ | ที่พักไฮตาก ภูเรือ จ.เลย">
   <meta property="og:description" content="พักใกล้ธรรมชาติในบ้านพักส่วนตัววิวภูเขา พร้อมอาหารเช้า ดูห้องพัก เช็กวันว่าง และจองตรงกับมองดูเลยโฮมสเตย์">
   <meta property="og:url" content="https://xn--72c0azbgo9b4eqc.com/">
-  <meta property="og:image" content="https://xn--72c0azbgo9b4eqc.com/hero-mongdoolei.jpg">
+  <meta property="og:image" content="https://xn--72c0azbgo9b4eqc.com/images/hero-daily/hero-11.jpg">
   <meta property="og:image:alt" content="วิวภูเขาและทะเลหมอกจากมองดูเลยโฮมสเตย์">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="มองดูเลยโฮมสเตย์ | ที่พักไฮตาก ภูเรือ จ.เลย">
   <meta name="twitter:description" content="บ้านพักส่วนตัววิวภูเขาที่บ้านไฮตาก พร้อมอาหารเช้า เช็กวันว่างและจองตรงกับที่พัก">
-  <meta name="twitter:image" content="https://xn--72c0azbgo9b4eqc.com/hero-mongdoolei.jpg">
+  <meta name="twitter:image" content="https://xn--72c0azbgo9b4eqc.com/images/hero-daily/hero-11.jpg">
   <meta name="twitter:image:alt" content="วิวภูเขาและทะเลหมอกจากมองดูเลยโฮมสเตย์">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -36,7 +36,7 @@
     "alternateName": "Mong Doo Loei Homestay",
     "description": "บ้านพักส่วนตัววิวภูเขา ที่บ้านไฮตาก อำเภอภูเรือ จังหวัดเลย พร้อมอาหารเช้า Wi-Fi และที่จอดรถ",
     "url": "https://xn--72c0azbgo9b4eqc.com/",
-    "image": "https://xn--72c0azbgo9b4eqc.com/hero-mongdoolei.jpg",
+    "image": "https://xn--72c0azbgo9b4eqc.com/images/hero-daily/hero-11.jpg",
     "telephone": ["+66-85-832-2960", "+66-81-368-9478"],
     "sameAs": ["https://www.facebook.com/Hitakland/"],
     "address": {
@@ -64,7 +64,7 @@
   </script>
 
   <style>
-    :root{--forest-950:#0b1810;--forest-900:#13271b;--forest-800:#1c3525;--forest-700:#31553d;--gold:#d69a4b;--gold-700:#a96d27;--gold-100:#f5e4c4;--cream:#f7f2e8;--cream-2:#ece3d2;--white:#fffdf9;--ink:#1c241e;--muted:#66695f;--line:#ddd2bd;--danger:#8d352e;--shadow:0 24px 70px rgba(11,24,16,.14);--radius:22px;--wrap:1180px;--hero-image:url('hero-mongdoolei.jpg')}
+    :root{--forest-950:#0b1810;--forest-900:#13271b;--forest-800:#1c3525;--forest-700:#31553d;--gold:#d69a4b;--gold-700:#a96d27;--gold-100:#f5e4c4;--cream:#f7f2e8;--cream-2:#ece3d2;--white:#fffdf9;--ink:#1c241e;--muted:#66695f;--line:#ddd2bd;--danger:#8d352e;--shadow:0 24px 70px rgba(11,24,16,.14);--radius:22px;--wrap:1180px;--hero-image:url('images/hero-daily/hero-01.jpg')}
     *,*::before,*::after{box-sizing:border-box}
     html{scroll-behavior:smooth;scroll-padding-top:82px}
     body{margin:0;background:var(--cream);color:var(--ink);font:400 16px/1.75 'Prompt',sans-serif;-webkit-font-smoothing:antialiased}
@@ -146,18 +146,9 @@
     'use strict';
     // แก้แคปชั่นได้ที่นี่: [หัวข้อบรรทัดแรก, หัวข้อบรรทัดที่สอง, คำบรรยาย]
     // แคปชั่นและภาพ Hero เปลี่ยนตอนเที่ยงคืนประเทศไทย ไม่สุ่มเมื่อรีเฟรชหน้า
-    const heroImages = [
-      'hero-mongdoolei.jpg',
-      'hero-view.jpg',
-      'images/mong-doo-mok/sea-of-mist-view.jpg',
-      'images/mong-doo-mok/house-view.jpg',
-      'images/mong-doo-mok/garden-mountain-view.jpg',
-      'images/mong-doo-mok/balcony-mountain-view.jpg',
-      'images/camping-ground/sunset-wide.jpg',
-      'images/camping-ground/dramatic-sunset.jpg',
-      'images/camping-ground/camping-view.jpg',
-      'images/camping-ground/camping-area.jpg'
-    ];
+    const heroImages = Array.from({ length: 13 }, (_, index) =>
+      `images/hero-daily/hero-${String(index + 1).padStart(2, '0')}.jpg`
+    );
     const captions = [
       ['ตื่นเหนือทะเลหมอก', 'พักใกล้ธรรมชาติ', 'บ้านพักส่วนตัวบนขุนเขา ชมหมอกยามเช้า สูดอากาศเย็นสบาย และเริ่มวันใหม่ด้วยอาหารเช้าแสนอบอุ่น'],
       ['วางความวุ่นวาย', 'ไว้ปลายทางภูเรือ', 'ให้วันพักผ่อนเป็นเวลาของคุณ มองวิวขุนเขา ใช้ชีวิตช้าลง และเก็บความสบายใจกลับบ้าน'],
