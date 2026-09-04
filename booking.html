@@ -554,6 +554,9 @@
       <div class="step-num">1</div>
       <h2>เลือกวันที่เข้าพัก</h2>
     </div>
+    <p style="font-size:13px;color:#6b6257;margin:-6px 0 10px;">
+      ขณะนี้เปิดให้จองได้เฉพาะภายในเดือนนี้เท่านั้น
+    </p>
     <div class="ledger">
       <div class="row2">
         <div class="field">
@@ -1038,7 +1041,9 @@
     next.setDate(next.getDate() + 1);
     co.min = e.target.value;
     if (!co.value || new Date(co.value) <= new Date(e.target.value)) {
-      co.value = next.toISOString().slice(0, 10);
+      const suggested = next.toISOString().slice(0, 10);
+      // ห้ามแนะนำวันเช็คเอาท์เกินขอบเขตที่เปิดให้จอง (เดือนปัจจุบันเท่านั้น)
+      co.value = suggested > co.max ? co.max : suggested;
     }
     updateThaiDateDisplays();
     refreshAvailability();
@@ -1050,9 +1055,20 @@
     updateSummary();
   });
 
-  // ตั้งค่า min วันที่เป็นวันนี้
-  const todayStr = new Date().toISOString().slice(0, 10);
+  // เปิดให้จองได้เฉพาะเดือนปัจจุบันเท่านั้น: วันเช็คอินเลือกได้ตั้งแต่
+  // วันนี้ถึงวันสุดท้ายของเดือนนี้ ส่วนวันเช็คเอาท์เลือกได้ถึงวันที่ 1
+  // ของเดือนถัดไป (เพื่อให้จองคืนสุดท้ายของเดือนได้ตามปกติ)
+  const now = new Date();
+  const todayStr = now.toISOString().slice(0, 10);
+  const lastDayOfMonthStr = new Date(now.getFullYear(), now.getMonth() + 1, 0)
+    .toISOString()
+    .slice(0, 10);
+  const maxCheckOutStr = new Date(now.getFullYear(), now.getMonth() + 1, 1)
+    .toISOString()
+    .slice(0, 10);
   document.getElementById("checkIn").min = todayStr;
+  document.getElementById("checkIn").max = lastDayOfMonthStr;
+  document.getElementById("checkOut").max = maxCheckOutStr;
 
   // ---------------- ส่งคำขอจอง ----------------
   document.getElementById("bookingForm").addEventListener("submit", async (e) => {
@@ -1062,6 +1078,18 @@
 
     if (!selectedRoom) {
       errorBox.textContent = "กรุณาเลือกห้องพักก่อนครับ";
+      errorBox.style.display = "block";
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+
+    // กันเหนียวอีกชั้น เผื่อมีการแก้ไขค่าวันที่ผ่านช่องทางอื่นนอกปฏิทิน
+    // (นอกเหนือจาก min/max ที่ตั้งไว้บน input) ให้ตรงกับเงื่อนไข "เปิดจอง
+    // เฉพาะเดือนนี้" เสมอ
+    const ciEl = document.getElementById("checkIn");
+    const coEl = document.getElementById("checkOut");
+    if (ciEl.value < ciEl.min || ciEl.value > ciEl.max || coEl.value > coEl.max) {
+      errorBox.textContent = "ขณะนี้เปิดให้จองได้เฉพาะภายในเดือนนี้เท่านั้นครับ";
       errorBox.style.display = "block";
       window.scrollTo({ top: 0, behavior: "smooth" });
       return;
@@ -1246,7 +1274,7 @@
           qrStatus.classList.add("confirmed");
           qrStatus.querySelector(".dot")?.remove();
           qrStatusText.textContent = "✓ ได้รับเงินมัดจำแล้ว การจองของคุณยืนยันสมบูรณ์!";
-          // ใช้ข้อมูลจากเซิร์ฟเวอร์เป็นหลัก และข้อมูลที่เพิ่งกรอกเป็น fallback
+          // ใช้ข้อมูลจากเซิร์ฟเวอร์เป็นหลัก และข้อมูลที่เพิ่มกรอกเป็น fallback
           // เพื่อให้รายละเอียดแสดงได้แม้รายการเก่าใช้ชื่อฟิลด์คนละแบบ
           const serverBooking = Object.fromEntries(
             Object.entries(data.booking || {}).filter(([, value]) =>
