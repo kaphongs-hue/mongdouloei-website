@@ -701,6 +701,7 @@
 <footer id="footerText">มองดูเลยโฮมสเตย์</footer>
 
 <script type="module">
+import { resolveImageUrl, setRoomImage } from "./room-images.js";
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
   import { getFirestore, collection, query, where, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
   import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-functions.js";
@@ -765,13 +766,7 @@
   const HIDDEN_PUBLIC_IMAGES = ["thoe-01.jpg", "thoe-02.jpg", "thoe-06.jpg", "thoe-08.jpg"];
   const isSuitablePublicImage = (value) => !HIDDEN_PUBLIC_IMAGES.some((name) => String(value || "").toLowerCase().includes(name));
   const escapeHtml = (value) => String(value ?? "").replace(/[&<>'"]/g, (char) => ({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[char]));
-  const safeImageUrl = (value) => {
-    if (value == null) return "";
-    try {
-      const url = new URL(String(value).trim());
-      return ["https:", "http:"].includes(url.protocol) ? url.href : "";
-    } catch { return ""; }
-  };
+  const safeImageUrl = (value) => resolveImageUrl(value);
   const roomImageList = (room) => {
     const values = [];
     if (room.coverImageUrl) values.push(room.coverImageUrl);
@@ -910,7 +905,7 @@
           <div class="check">✓</div>
           <div class="status-badge ${isOccupied ? "status-occupied" : "status-vacant"}">${isOccupied ? "ไม่ว่างช่วงนี้" : "ว่าง"}</div>
           ${images.length
-            ? `<div class="room-photo" style="background-image:url('${escapeHtml(images[0])}')" role="img" aria-label="รูป ${safeName}"></div>`
+            ? `<div class="room-photo" data-room-photo="${escapeHtml(images[0])}" role="img" aria-label="รูป ${safeName}"></div>`
             : `<div class="room-photo room-photo-fallback" role="img" aria-label="กำลังอัปเดตรูป ${safeName}"><span class="emoji">${escapeHtml(r.emoji || "🏡")}</span></div>`
           }
           ${galleryBtn}
@@ -920,6 +915,16 @@
         </div>
       `;
     }).join("");
+
+    grid.querySelectorAll('[data-room-photo]').forEach((photo) => {
+      const img = new Image();
+      img.alt = photo.getAttribute('aria-label') || 'รูปห้องพัก';
+      img.style.cssText = 'width:100%;height:100%;object-fit:cover;display:block';
+      setRoomImage(img, photo.dataset.roomPhoto);
+      photo.removeAttribute('role');
+      photo.removeAttribute('aria-label');
+      photo.append(img);
+    });
 
     grid.querySelectorAll(".room-card:not(.occupied)").forEach((card) => {
       card.addEventListener("click", () => selectRoom(card.dataset.id));
@@ -980,7 +985,7 @@
   }
 
   function showLightboxImage() {
-    document.getElementById("lightboxImg").src = lightboxImages[lightboxIndex];
+    setRoomImage(document.getElementById("lightboxImg"), lightboxImages[lightboxIndex]);
     const multi = lightboxImages.length > 1;
     document.getElementById("lightboxCount").textContent = multi ? `${lightboxIndex + 1} / ${lightboxImages.length}` : "";
     document.getElementById("lightboxPrev").style.display = multi ? "flex" : "none";

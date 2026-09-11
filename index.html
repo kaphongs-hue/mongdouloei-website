@@ -273,6 +273,7 @@
   <div class="lightbox" id="lightbox" role="dialog" aria-modal="true" aria-label="แกลเลอรีรูปห้องพัก" aria-hidden="true"><button class="lb-close" aria-label="ปิดแกลเลอรี">×</button><button class="lb-prev" aria-label="รูปก่อนหน้า">‹</button><img id="lightboxImage" alt=""><button class="lb-next" aria-label="รูปถัดไป">›</button><div class="lb-caption" id="lightboxCaption"></div></div>
 
   <script type="module">
+    import { resolveImageUrl, setRoomImage } from './room-images.js';
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
     import { getFirestore, collection, doc, getDoc, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
     import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-functions.js";
@@ -312,10 +313,10 @@
       if(Array.isArray(room.imageUrls))values.push(...room.imageUrls);
       if(Array.isArray(room.images))values.push(...room.images.map(item=>typeof item==='string'?item:item?.url||item?.src));
       if(room.imageUrl)values.push(room.imageUrl);
-      return [...new Set(values.filter(isSuitablePublicImage).map(value=>cleanUrl(value)).filter(Boolean))];
+      return [...new Set(values.filter(isSuitablePublicImage).map(value=>resolveImageUrl(value)).filter(Boolean))];
     };
 
-    function imageWithFallback(src,alt){const img=new Image();img.loading='lazy';img.decoding='async';img.alt=alt;img.src=cleanUrl(src,FALLBACK_IMAGE)||FALLBACK_IMAGE;img.addEventListener('error',()=>{if(!img.src.endsWith(FALLBACK_IMAGE))img.src=FALLBACK_IMAGE},{once:true});return img}
+    function imageWithFallback(src,alt){const img=new Image();img.loading='lazy';img.decoding='async';img.alt=alt;setRoomImage(img,src);return img}
     function renderState(title,detail){els.grid.replaceChildren();const box=make('div','state');box.append(make('strong','',title),document.createTextNode(detail));els.grid.append(box);els.grid.setAttribute('aria-busy','false')}
 
     function renderRoom(room){
@@ -368,7 +369,7 @@
     }
 
     const lightbox=document.querySelector('#lightbox'),lbImage=document.querySelector('#lightboxImage'),lbCaption=document.querySelector('#lightboxCaption');
-    function showGalleryImage(){lbImage.src=galleryImages[galleryIndex]||FALLBACK_IMAGE;lbImage.onerror=()=>{lbImage.src=FALLBACK_IMAGE};lbCaption.textContent=`${lbImage.alt} · รูป ${galleryIndex+1} จาก ${galleryImages.length}`;const single=galleryImages.length<2;lightbox.querySelector('.lb-prev').hidden=single;lightbox.querySelector('.lb-next').hidden=single}
+    function showGalleryImage(){setRoomImage(lbImage,galleryImages[galleryIndex]||FALLBACK_IMAGE);lbCaption.textContent=`${lbImage.alt} · รูป ${galleryIndex+1} จาก ${galleryImages.length}`;const single=galleryImages.length<2;lightbox.querySelector('.lb-prev').hidden=single;lightbox.querySelector('.lb-next').hidden=single}
     function openGallery(images,name,startIndex=0){galleryImages=images;galleryIndex=Math.min(Math.max(Number(startIndex)||0,0),images.length-1);lastFocus=document.activeElement;lbImage.alt=name;lightbox.classList.add('open');lightbox.setAttribute('aria-hidden','false');document.body.classList.add('locked');showGalleryImage();lightbox.querySelector('.lb-close').focus()}
     function closeGallery(){lightbox.classList.remove('open');lightbox.setAttribute('aria-hidden','true');document.body.classList.remove('locked');lastFocus?.focus()}
     function stepGallery(delta){galleryIndex=(galleryIndex+delta+galleryImages.length)%galleryImages.length;showGalleryImage()}
