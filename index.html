@@ -339,12 +339,35 @@
       const details=[review.source||'รีวิวจากลูกค้า',reviewDate(review.reviewDate||review.date)].filter(Boolean).join(' · ');author.append(make('span','',details));meta.append(author);const sourceUrl=cleanUrl(review.sourceUrl||review.url);if(sourceUrl){const link=make('a','review-link','ดูต้นฉบับ ↗');link.href=sourceUrl;link.target='_blank';link.rel='noopener noreferrer';meta.append(link)}card.append(stars,quote,meta);return card;
     }
     function renderReviews(reviews,summary={}){
-      els.reviews.replaceChildren();
+      els.reviews.replaceChildren();els.reviewSummary.hidden=true;els.allReviewsLink.hidden=true;
       if(!reviews.length){const empty=make('div','review-empty','ยังไม่มีรีวิวที่อนุมัติให้เผยแพร่');empty.append(document.createElement('br'));const facebook=make('a','','ติดตามรีวิวและข้อมูลล่าสุดที่ Facebook ของที่พัก ↗');facebook.href='https://www.facebook.com/Hitakland/';facebook.target='_blank';facebook.rel='noopener noreferrer';empty.append(facebook);els.reviews.append(empty);els.reviews.setAttribute('aria-busy','false');return}
       reviews.forEach(review=>els.reviews.append(renderReview(review)));const ratings=reviews.map(review=>Number(review.rating)).filter(rating=>rating>=1&&rating<=5);const average=Number(summary.rating);const total=Number(summary.reviewCount);if(ratings.length){els.reviewAverage.textContent=Number.isFinite(average)?average.toFixed(1):(ratings.reduce((sum,rating)=>sum+rating,0)/ratings.length).toFixed(1);els.reviewCount.textContent=Number.isFinite(total)&&total>0?`จาก Google ${new Intl.NumberFormat('th-TH').format(total)} รีวิว`:`จากรีวิวที่แสดง ${ratings.length} รายการ`;const allReviewsUrl=cleanUrl(summary.sourceUrl);if(allReviewsUrl){els.allReviewsLink.href=allReviewsUrl;els.allReviewsLink.hidden=false}els.reviewSummary.hidden=false}els.reviews.setAttribute('aria-busy','false');observeReveals();
     }
     async function loadReviews(app){
-      try{const getPublicReviews=httpsCallable(getFunctions(app,'asia-southeast1'),'getPublicReviews');const result=await getPublicReviews();renderReviews(Array.isArray(result.data?.reviews)?result.data.reviews:[],result.data||{})}catch(error){console.warn('Unable to load public reviews:',error);renderReviews([])}
+      els.reviewSummary.hidden=true;
+      els.reviews.setAttribute('aria-busy','true');
+      const status=make('div','review-empty','กำลังโหลดรีวิวจากลูกค้า…');
+      status.setAttribute('role','status');
+      els.reviews.replaceChildren(status);
+      const getPublicReviews=httpsCallable(getFunctions(app,'asia-southeast1'),'getPublicReviews',{timeout:15000});
+      for(let attempt=0;attempt<3;attempt++){
+        try{
+          const result=await getPublicReviews();
+          if(!Array.isArray(result.data?.reviews))throw new Error('Invalid reviews response');
+          renderReviews(result.data.reviews,result.data);return;
+        }catch(error){
+          console.warn('Unable to load public reviews:',error);
+          if(attempt<2){status.textContent='กำลังลองโหลดรีวิวอีกครั้ง…';await new Promise(resolve=>setTimeout(resolve,3000*(attempt+1)));continue;}
+          status.textContent='โหลดรีวิวไม่สำเร็จชั่วคราว กรุณาลองอีกครั้ง';
+          status.append(document.createElement('br'));
+          const retry=make('button','btn outline','ลองโหลดรีวิวอีกครั้ง');retry.type='button';
+          retry.addEventListener('click',()=>loadReviews(app));
+          const google=make('a','review-link','ดูรีวิวบน Google ↗');
+          google.href='https://maps.google.com/?cid=10078031287697729725';google.target='_blank';google.rel='noopener noreferrer';
+          status.append(retry,document.createTextNode(' '),google);
+          els.reviews.setAttribute('aria-busy','false');
+        }
+      }
     }
 
     async function loadData(){
