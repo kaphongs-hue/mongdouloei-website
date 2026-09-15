@@ -1,4 +1,5 @@
 import {getFirestore} from "firebase-admin/firestore";
+import {octoberNightRate, octoberExtraGuestTotal} from "./octoberPricing";
 
 export interface Promotion {
   id: string;
@@ -58,14 +59,16 @@ export function applicablePromotion(
 export function quoteStay(
   promos: Promotion[], roomId: string, basePrice: number, pricingMode: string,
   checkIn: string, checkOut: string, guests: number
-): {roomTotal: number; promotionNames: string[]} {
+): {roomTotal: number; extraGuestTotal: number; promotionNames: string[]} {
   let roomTotal = 0;
   const names = new Set<string>();
   for (let date = checkIn; date < checkOut; date = nextDate(date)) {
     const promo = applicablePromotion(promos, roomId, pricingMode, date);
-    const nightlyPrice = Math.min(basePrice, promo?.price ?? basePrice);
+    const octoberRate = octoberNightRate(roomId, pricingMode, date);
+    const nightlyPrice = octoberRate ?? Math.min(basePrice, promo?.price ?? basePrice);
     roomTotal += nightlyPrice * (pricingMode === "per_guest" ? guests : 1);
-    if (promo && promo.price < basePrice) names.add(promo.name);
+    if (octoberRate !== null) names.add("โปรโมชั่นตุลาคม 2569");
+    else if (promo && promo.price < basePrice) names.add(promo.name);
   }
-  return {roomTotal, promotionNames: Array.from(names)};
+  return {roomTotal, extraGuestTotal: octoberExtraGuestTotal(roomId, pricingMode, checkIn, checkOut, guests), promotionNames: Array.from(names)};
 }

@@ -107,9 +107,8 @@ export const createPublicBooking = onCall(
     const promotions = await loadPromotions();
     const quote = quoteStay(promotions, data.roomId, roomPrice, pricingMode, data.checkInDate, data.checkOutDate, data.guests);
     const roomTotal = quote.roomTotal;
-    const extraGuests = pricingMode === "per_room" ? Math.max(0, data.guests - roomCapacity) : 0;
-    const extraGuestRate = 0;
-    const extraGuestTotal = room.chargesExtraGuestFee === false ? 0 : extraGuests * extraGuestRate * nights;
+    const extraGuestTotal = quote.extraGuestTotal;
+    const extraGuestRate = extraGuestTotal > 0 ? 400 : 0;
     const total = roomTotal + extraGuestTotal;
     const expectedDeposit = Math.round(total * 0.5);
     const now = new Date();

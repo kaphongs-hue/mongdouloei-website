@@ -563,7 +563,7 @@
       <h2>เลือกวันที่เข้าพัก</h2>
     </div>
     <p style="font-size:13px;color:#6b6257;margin:-6px 0 10px;">
-      ขณะนี้เปิดให้จองได้เฉพาะภายในเดือนนี้เท่านั้น
+      เลือกวันเข้าพักได้ถึง <span id="bookingWindowEnd"></span>
     </p>
     <div class="ledger">
       <div class="row2">
@@ -579,6 +579,15 @@
         </div>
       </div>
     </div>
+  </section>
+
+  <section class="panel" aria-labelledby="octoberPromoTitle">
+    <h2 id="octoberPromoTitle">โปรโมชั่นเข้าพัก 1–31 ตุลาคม 2569</h2>
+    <p>บ้านพักสำหรับ 2 ท่าน / คืน · ฟรีอาหารเช้าและ Wi-Fi</p>
+    <p>อา.–พฤ. <strong>1,390 บาท</strong> · ศุกร์ <strong>1,590 บาท</strong><br>
+    เสาร์ / วันหยุดราชการ <strong>1,790 บาท</strong> · เสริม <strong>400 บาท / ท่าน / คืน</strong></p>
+    <p>Long Weekend คืนวันที่ 23–25 ต.ค.: <strong>บ้านมองดูหมอกและบ้านสุดทางรัก 1,890 บาท / คืน</strong><br>
+    วันที่ 13 ต.ค. ใช้ราคาวันหยุดราชการ · บ้านหลังอื่นคิดตามประเภทวันข้างต้น · ลานกางเต็นท์ใช้ราคาเดิม</p>
   </section>
 
   <section id="rooms-section" class="panel">
@@ -622,6 +631,7 @@
 
       <div class="summary" id="summaryBox" style="display:none;">
         <div class="summary-row"><span>ราคาห้อง × <span id="sumNights">1</span> คืน</span><span class="val" id="sumRoomTotal">–</span></div>
+        <div class="summary-row"><span>ค่าเสริมผู้เข้าพัก</span><span class="val" id="sumExtraGuestTotal">–</span></div>
         <div class="summary-row total"><span>ยอดรวมโดยประมาณ</span><span class="val" id="sumTotal">–</span></div>
         <div class="summary-row"><span>มัดจำที่ต้องชำระ (50%)</span><span class="val" id="sumDeposit">–</span></div>
       </div>
@@ -702,6 +712,7 @@
 
 <script type="module">
 import { resolveImageUrl, setRoomImage } from "./room-images.js";
+import { octoberNightRate, octoberExtraGuestTotal } from "./functions/src/octoberPricing.js";
   import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
   import { getFirestore, collection, query, where, getDocs, doc, getDoc } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore.js";
   import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-functions.js";
@@ -750,15 +761,19 @@ import { resolveImageUrl, setRoomImage } from "./room-images.js";
   const stayQuote = (room, checkIn, checkOut, guests) => {
     let total = 0;
     let promotionalNights = 0;
-    let lowestNightlyPrice = Number(room.price || 0);
+    let lowestNightlyPrice = Infinity;
+    let highestNightlyPrice = 0;
     for (let date = checkIn; date < checkOut; date = nextDateStr(date)) {
       const promo = promotionForNight(room, date);
-      const nightlyPrice = Math.min(Number(room.price || 0), Number(promo?.price || room.price || 0));
+      const octoberRate = octoberNightRate(room.id, room.pricingMode || "per_room", date);
+      const nightlyPrice = octoberRate ?? Math.min(Number(room.price || 0), Number(promo?.price || room.price || 0));
       total += nightlyPrice * ((room.pricingMode === "per_guest") ? guests : 1);
       lowestNightlyPrice = Math.min(lowestNightlyPrice, nightlyPrice);
-      if (promo && nightlyPrice < Number(room.price || 0)) promotionalNights++;
+      highestNightlyPrice = Math.max(highestNightlyPrice, nightlyPrice);
+      if (octoberRate !== null || (promo && nightlyPrice < Number(room.price || 0))) promotionalNights++;
     }
-    return {total, promotionalNights, lowestNightlyPrice};
+    const extraGuestTotal = octoberExtraGuestTotal(room.id, room.pricingMode || "per_room", checkIn, checkOut, guests);
+    return {total, extraGuestTotal, promotionalNights, lowestNightlyPrice, highestNightlyPrice};
   };
 
   const money = (n) => new Intl.NumberFormat("th-TH").format(Math.round(n));
@@ -889,10 +904,9 @@ import { resolveImageUrl, setRoomImage } from "./room-images.js";
       const ci = document.getElementById("checkIn").value;
       const co = document.getElementById("checkOut").value;
       const previewQuote = ci && co ? stayQuote(r, ci, co, 1) : null;
-      const hasPromotion = previewQuote?.promotionalNights > 0;
-      const priceHtml = hasPromotion
-        ? `<s style="font-size:14px;color:var(--ink-soft)">฿${money(r.price || 0)}</s> ฿${money(previewQuote.lowestNightlyPrice)} <small>/ คืน${previewQuote.promotionalNights > 1 ? " (บางคืน)" : ""}</small>`
-        : `฿${money(r.price || 0)} <small>${r.pricingMode === "per_guest" ? "/ คน / คืน" : "/ คืน"}</small>`;
+      const rate = previewQuote ? previewQuote.lowestNightlyPrice : Number(r.price || 0);
+      const rateLabel = previewQuote && previewQuote.highestNightlyPrice > rate ? "เริ่มต้น " : "";
+      const priceHtml = `${rateLabel}฿${money(rate)} <small>${r.pricingMode === "per_guest" ? "/ คน / คืน" : "/ คืน"}${previewQuote?.promotionalNights ? " · โปรโมชั่น" : ""}</small>`;
       const galleryBtn = images.length
         ? `<button type="button" class="gallery-btn" data-id="${safeId}">
              <svg width="13" height="13" viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" stroke-width="1.8"/><circle cx="8.5" cy="10" r="1.5" fill="currentColor"/><path d="M21 15l-5-4-4 3-3-2-5 4" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
@@ -1040,8 +1054,10 @@ import { resolveImageUrl, setRoomImage } from "./room-images.js";
     if (nights < 1) { box.style.display = "none"; return; }
 
     const guests = Math.max(1, parseInt(document.getElementById("guests").value, 10) || 1);
-    const roomTotal = stayQuote(selectedRoom, ci, co, guests).total;
-    const total = roomTotal; // ค่าเสริมท่านคำนวณฝั่งแอดมินตอนยืนยันอีกที
+    const quote = stayQuote(selectedRoom, ci, co, guests);
+    const roomTotal = quote.total;
+    const total = roomTotal + quote.extraGuestTotal;
+    document.getElementById("sumExtraGuestTotal").textContent = `฿${money(quote.extraGuestTotal)}`;
     const deposit = Math.round(total * 0.5);
 
     document.getElementById("sumNights").textContent = nights;
@@ -1053,12 +1069,13 @@ import { resolveImageUrl, setRoomImage } from "./room-images.js";
 
   document.getElementById("checkIn").addEventListener("change", (e) => {
     const co = document.getElementById("checkOut");
+    if (!e.target.value) { updateThaiDateDisplays(); updateSummary(); return; }
     const next = new Date(e.target.value);
     next.setDate(next.getDate() + 1);
-    co.min = e.target.value;
+    co.min = nextDateStr(e.target.value);
     if (!co.value || new Date(co.value) <= new Date(e.target.value)) {
       const suggested = next.toISOString().slice(0, 10);
-      // ห้ามแนะนำวันเช็คเอาท์เกินขอบเขตที่เปิดให้จอง (เดือนปัจจุบันเท่านั้น)
+      // ห้ามแนะนำวันเช็คเอาท์เกินขอบเขตที่เปิดให้จอง
       co.value = suggested > co.max ? co.max : suggested;
     }
     updateThaiDateDisplays();
@@ -1071,20 +1088,19 @@ import { resolveImageUrl, setRoomImage } from "./room-images.js";
     updateSummary();
   });
 
-  // เปิดให้จองได้เฉพาะเดือนปัจจุบันเท่านั้น: วันเช็คอินเลือกได้ตั้งแต่
-  // วันนี้ถึงวันสุดท้ายของเดือนนี้ ส่วนวันเช็คเอาท์เลือกได้ถึงวันที่ 1
-  // ของเดือนถัดไป (เพื่อให้จองคืนสุดท้ายของเดือนได้ตามปกติ)
-  const now = new Date();
-  const todayStr = now.toISOString().slice(0, 10);
-  const lastDayOfMonthStr = new Date(now.getFullYear(), now.getMonth() + 1, 0)
-    .toISOString()
-    .slice(0, 10);
-  const maxCheckOutStr = new Date(now.getFullYear(), now.getMonth() + 1, 1)
-    .toISOString()
-    .slice(0, 10);
+  // Keep the existing current-month window, and open October 2026 in advance.
+  // Use Bangkok's calendar date even when the visitor is in another timezone.
+  const todayStr = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Bangkok", year: "numeric", month: "2-digit", day: "2-digit",
+  }).format(new Date());
+  const [currentYear, currentMonth] = todayStr.split("-").map(Number);
+  const currentMonthEnd = new Date(Date.UTC(currentYear, currentMonth, 0)).toISOString().slice(0, 10);
+  const lastBookableNight = currentMonthEnd > "2026-10-31" ? currentMonthEnd : "2026-10-31";
+  document.getElementById("bookingWindowEnd").textContent = formatThaiDate(lastBookableNight);
   document.getElementById("checkIn").min = todayStr;
-  document.getElementById("checkIn").max = lastDayOfMonthStr;
-  document.getElementById("checkOut").max = maxCheckOutStr;
+  document.getElementById("checkIn").max = lastBookableNight;
+  document.getElementById("checkOut").min = nextDateStr(todayStr);
+  document.getElementById("checkOut").max = nextDateStr(lastBookableNight);
 
   // ---------------- ส่งคำขอจอง ----------------
   document.getElementById("bookingForm").addEventListener("submit", async (e) => {
@@ -1100,12 +1116,11 @@ import { resolveImageUrl, setRoomImage } from "./room-images.js";
     }
 
     // กันเหนียวอีกชั้น เผื่อมีการแก้ไขค่าวันที่ผ่านช่องทางอื่นนอกปฏิทิน
-    // (นอกเหนือจาก min/max ที่ตั้งไว้บน input) ให้ตรงกับเงื่อนไข "เปิดจอง
-    // เฉพาะเดือนนี้" เสมอ
+    // ให้ตรงกับช่วงวันที่เปิดจองเสมอ
     const ciEl = document.getElementById("checkIn");
     const coEl = document.getElementById("checkOut");
-    if (ciEl.value < ciEl.min || ciEl.value > ciEl.max || coEl.value > coEl.max) {
-      errorBox.textContent = "ขณะนี้เปิดให้จองได้เฉพาะภายในเดือนนี้เท่านั้นครับ";
+    if (!ciEl.value || !coEl.value || ciEl.value < ciEl.min || ciEl.value > ciEl.max || coEl.value <= ciEl.value || coEl.value > coEl.max) {
+      errorBox.textContent = "กรุณาเลือกวันเข้าพักในช่วงที่เปิดจอง และวันเช็คเอาท์หลังวันเช็คอินครับ";
       errorBox.style.display = "block";
       window.scrollTo({ top: 0, behavior: "smooth" });
       return;
