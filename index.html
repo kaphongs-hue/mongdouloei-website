@@ -408,7 +408,7 @@
 <style>
 #mdlpromo-overlay{position:fixed;inset:0;background:rgba(20,30,20,.6);backdrop-filter:blur(3px);display:flex;align-items:center;justify-content:center;z-index:1000;opacity:0;pointer-events:none;transition:opacity .35s ease}
 #mdlpromo-overlay.show{opacity:1;pointer-events:auto}
-#mdlpromo-modal{background:#fffefb;border-radius:22px;max-width:400px;width:90%;overflow:hidden;position:relative;box-shadow:0 25px 70px rgba(0,0,0,.35);transform:scale(.85) translateY(24px);transition:transform .4s cubic-bezier(.34,1.56,.64,1)}
+#mdlpromo-modal{background:#fffefb;border-radius:22px;max-width:400px;width:90%;max-height:90vh;overflow-y:auto;position:relative;box-shadow:0 25px 70px rgba(0,0,0,.35);transform:scale(.85) translateY(24px);transition:transform .4s cubic-bezier(.34,1.56,.64,1)}
 #mdlpromo-overlay.show #mdlpromo-modal{transform:scale(1) translateY(0)}
 #mdlpromo-modal .mdlpromo-header{position:relative;background:linear-gradient(135deg,#3a6b3e 0%,#2f5233 55%,#1f3b22 100%);padding:32px 24px 42px;text-align:center;overflow:hidden}
 #mdlpromo-modal .mdlpromo-header::before{content:"";position:absolute;top:-40px;right:-40px;width:140px;height:140px;background:rgba(255,255,255,.07);border-radius:50%}
