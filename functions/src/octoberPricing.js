@@ -12,7 +12,8 @@ export const LONG_WEEKEND_ROOM_IDS = ["ObHkwUBBcJqSPDtOACVC", "tzg3nMAqDhqfZRB7N
 export function octoberNightRate(roomId, pricingMode, date) {
   if (pricingMode === "per_guest" || !OCTOBER_ROOM_IDS.includes(roomId) ||
       date < "2026-10-01" || date > "2026-10-31") return null;
-  const longWeekend = date >= "2026-10-23" && date <= "2026-10-25";
+  const longWeekend = (date >= "2026-10-11" && date <= "2026-10-13") ||
+    (date >= "2026-10-23" && date <= "2026-10-25");
   if (longWeekend && LONG_WEEKEND_ROOM_IDS.includes(roomId)) return 1890;
   const weekday = new Date(`${date}T00:00:00Z`).getUTCDay();
   if (weekday === 6 || date === "2026-10-13" || date === "2026-10-23") return 1790;

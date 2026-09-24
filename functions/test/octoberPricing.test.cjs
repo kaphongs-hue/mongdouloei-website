@@ -15,7 +15,8 @@ vm.runInContext(quoteSource + '\nglobalThis.quote = stayQuote;', context);
 test('October calendar rates and long-weekend room scope', () => {
   for (const [date, base, premium] of [
     ['2026-10-01',1390,1390], ['2026-10-02',1590,1590], ['2026-10-03',1790,1790],
-    ['2026-10-04',1390,1390], ['2026-10-12',1390,1390], ['2026-10-13',1790,1790],
+    ['2026-10-04',1390,1390], ['2026-10-10',1790,1790], ['2026-10-11',1390,1890],
+    ['2026-10-12',1390,1890], ['2026-10-13',1790,1890], ['2026-10-14',1390,1390],
     ['2026-10-16',1590,1590], ['2026-10-22',1390,1390], ['2026-10-23',1790,1890],
     ['2026-10-24',1790,1890], ['2026-10-25',1390,1890], ['2026-10-26',1390,1390],
     ['2026-10-31',1790,1790],
@@ -34,6 +35,14 @@ test('October tariff overrides base prices and overlapping discounts', () => {
   const promo = {id:'legacy',name:'Legacy',active:true,startDate:'2026-09-01',endDate:'2026-10-31',weekdays:[],price:999,appliesToAllRooms:true,roomIds:[],appliesToPricingModes:[]};
   assert.equal(quoteStay([promo],special,1800,'per_room','2026-10-23','2026-10-26',2).roomTotal,5670);
   assert.equal(quoteStay([promo],regular,1500,'per_room','2026-09-30','2026-10-02',2).roomTotal,2389);
+});
+test('October 11–13 premium applies per occupied night and excludes checkout', () => {
+  for (const id of [special, 'tzg3nMAqDhqfZRB7NXRw']) {
+    assert.equal(quoteStay([],id,1800,'per_room','2026-10-11','2026-10-14',2).roomTotal,5670);
+    assert.equal(quoteStay([],id,1800,'per_room','2026-10-10','2026-10-11',2).roomTotal,1790);
+    assert.equal(quoteStay([],id,1800,'per_room','2026-10-13','2026-10-15',2).roomTotal,3280);
+  }
+  assert.equal(quoteStay([],regular,1500,'per_room','2026-10-11','2026-10-14',2).roomTotal,4570);
 });
 test('Extra guests, mixed-month stays and deposit totals', () => {
   const q=quoteStay([],special,1800,'per_room','2026-10-23','2026-10-26',3);
